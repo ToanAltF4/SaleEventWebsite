@@ -57,23 +57,27 @@ def is_shopee_url(url):
     return "shopee.vn" in parsed.netloc
 
 
-def build_affiliate_url_product(shop_id, item_id, affiliate_id, sub_id1="Knsansale", sub_id2="KnSaleMxh"):
+def build_sub_id(sub_id1="Knsansale", sub_id2="KnSaleMxh", sub_id3="", sub_id4="", sub_id5=""):
+    return f"{sub_id1}-{sub_id2}-{sub_id3}-{sub_id4}-{sub_id5}"
+
+
+def build_affiliate_url_product(shop_id, item_id, affiliate_id):
     origin = f"https://shopee.vn/product/{shop_id}/{item_id}"
     return (
         f"https://s.shopee.vn/an_redir?"
         f"origin_link={quote(origin, safe='')}"
         f"&affiliate_id={affiliate_id}"
-        f"&sub_id={sub_id1}-{sub_id2}"
+        f"&sub_id={build_sub_id()}"
     )
 
 
-def build_affiliate_url_raw(raw_url, affiliate_id, sub_id1="Knsansale", sub_id2="KnSaleMxh"):
+def build_affiliate_url_raw(raw_url, affiliate_id):
     """Wrap any Shopee URL into affiliate redirect format."""
     return (
         f"https://s.shopee.vn/an_redir?"
         f"origin_link={quote(raw_url, safe='')}"
         f"&affiliate_id={affiliate_id}"
-        f"&sub_id={sub_id1}-{sub_id2}"
+        f"&sub_id={build_sub_id()}"
     )
 
 
@@ -137,8 +141,46 @@ def save_affiliate():
     return jsonify({"success": True, "affiliate_id": affiliate_id})
 
 
+@app.route("/api/convert-link", methods=["POST"])
+def convert_link():
+    """Simple link conversion: URL -> affiliate URL (no AI)."""
+    data = request.json
+    raw_urls = data.get("urls", "").strip()
+    if not raw_urls:
+        return jsonify({"error": "Vui lòng nhập ít nhất 1 link"}), 400
+
+    affiliate_id = get_setting("affiliate_id", "")
+    if not affiliate_id:
+        return jsonify({"error": "Vui lòng cài đặt Affiliate ID trước"}), 400
+
+    # Split by newlines and extract URLs
+    lines = raw_urls.splitlines()
+    results = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        # Extract URL from line (may contain text around it)
+        found = extract_urls_from_text(line)
+        if found:
+            for url in found:
+                aff_url, _ = process_single_url(url, affiliate_id)
+                results.append({"original": url, "affiliate": aff_url or "Không hỗ trợ"})
+        elif line.startswith(("http", "s.shopee", "shopee")):
+            if not line.startswith("http"):
+                line = "https://" + line
+            aff_url, _ = process_single_url(line, affiliate_id)
+            results.append({"original": line, "affiliate": aff_url or "Không hỗ trợ"})
+
+    if not results:
+        return jsonify({"error": "Không tìm thấy link hợp lệ"}), 400
+
+    return jsonify({"success": True, "results": results})
+
+
 @app.route("/api/convert", methods=["POST"])
 def convert():
+    """AI content conversion: message with links -> rewritten message with affiliate links."""
     data = request.json
     message = data.get("message", "").strip()
     if not message:
@@ -161,7 +203,7 @@ def convert():
             link_mapping[url] = aff_url
 
     if not link_mapping:
-        return jsonify({"error": "Không thể chuyển đổi link nào (không tìm thấy link Shopee sản phẩm)"}), 400
+        return jsonify({"error": "Không thể chuyển đổi link nào (không tìm thấy link Shopee)"}), 400
 
     # Build mapping text for prompt
     mapping_text = "\n".join(

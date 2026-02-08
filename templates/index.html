@@ -3,47 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Affiliate Converter</title>
+    <title>Săn Sale Cùng Kim Ngân</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        :root {
+            --primary: #E8567F;
+            --primary-bg: #FFF5F7;
+            --sidebar-bg: #FFFFFF;
+            --card-bg: #FFFFFF;
+            --border: #F0D4DA;
+            --text: #2D2D2D;
+            --text-sec: #666666;
+            --text-muted: #999999;
+            --sidebar-w: 230px;
+            --history-w: 280px;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
-            color: #333;
-            line-height: 1.5;
+            font-family: 'Quicksand', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
         }
 
-        .container {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 16px;
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            top: 0; left: 0;
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s ease;
         }
 
-        h1 {
-            font-size: 20px;
-            font-weight: 600;
+        .sidebar-top {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: none;
+            justify-content: flex-end;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text-sec);
+            padding: 2px 6px;
+        }
+
+        .sidebar-close:hover { color: var(--primary); }
+
+        .sidebar-nav {
+            flex: 1;
             padding: 16px 0;
-            border-bottom: 2px solid #ee4d2d;
-            margin-bottom: 16px;
-            color: #222;
         }
 
-        .section {
-            background: #fff;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .section-title {
+        .nav-item {
+            padding: 13px 20px;
+            cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            color: #555;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            color: var(--text-sec);
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+        }
+
+        .nav-item:hover {
+            background: var(--primary-bg);
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: var(--primary-bg);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        /* ===== HISTORY PANEL ===== */
+        .history-panel {
+            position: fixed;
+            top: 0; right: 0;
+            width: var(--history-w);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            border-left: 1px solid var(--border);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .history-panel.closed { transform: translateX(100%); }
+
+        .history-header {
+            padding: 20px 16px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .history-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-sec);
+            line-height: 1;
+        }
+
+        .history-close:hover { color: var(--primary); }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+
+        .history-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--primary-bg);
+        }
+
+        .history-item:hover { background: var(--primary-bg); }
+
+        .history-preview {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ===== TOGGLE BUTTONS ===== */
+        .toggle-sidebar {
+            display: none;
+            position: fixed;
+            top: 10px; left: 12px;
+            z-index: 200;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .toggle-history {
+            position: fixed;
+            top: 14px; right: 14px;
+            z-index: 200;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Quicksand', sans-serif;
+            color: var(--primary);
+        }
+
+        .toggle-history:hover, .toggle-sidebar:hover {
+            background: var(--primary-bg);
+        }
+
+        /* ===== OVERLAY ===== */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 90;
+        }
+
+        .overlay.active { display: block; }
+
+        /* ===== MAIN ===== */
+        .main {
+            margin-left: var(--sidebar-w);
+            margin-right: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: margin 0.3s ease;
+        }
+
+        .main.history-open { margin-right: var(--history-w); }
+
+        .main-header {
+            background: var(--primary);
+            padding: 32px 32px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .main-header h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 28px;
+            font-weight: 700;
+            font-style: italic;
             letter-spacing: 0.5px;
+        }
+
+        .main-header p {
+            font-size: 14px;
+            margin-top: 6px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 8px 0;
+        }
+
+        .page-title h3 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 28px;
+            font-weight: 700;
+            font-style: italic;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .page-title p {
+            font-size: 13px;
+            color: var(--text-sec);
+            font-weight: 500;
+        }
+
+        .main-body {
+            flex: 1;
+            padding: 20px 32px;
+        }
+
+        /* ===== CARDS ===== */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .aff-row {
@@ -53,185 +290,321 @@
 
         input[type="text"], textarea {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
             font-size: 14px;
-            font-family: inherit;
+            font-weight: 500;
+            font-family: 'Quicksand', sans-serif;
+            color: var(--text);
+            background: #fff;
             transition: border-color 0.2s;
         }
 
         input[type="text"]:focus, textarea:focus {
             outline: none;
-            border-color: #ee4d2d;
+            border-color: var(--primary);
         }
 
-        textarea {
-            min-height: 150px;
-            resize: vertical;
+        input[type="text"]::placeholder, textarea::placeholder {
+            color: #bbb;
         }
+
+        textarea { min-height: 160px; resize: vertical; }
 
         .btn {
-            padding: 10px 20px;
+            padding: 10px 22px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 700;
+            font-family: 'Quicksand', sans-serif;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.15s;
             white-space: nowrap;
         }
 
         .btn:hover { opacity: 0.85; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-primary {
-            background: #ee4d2d;
-            color: #fff;
+        .btn-primary { background: var(--primary); color: #fff; }
+
+        .btn-dark { background: var(--text); color: #fff; }
+
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+        }
+        .btn-outline:hover { background: var(--primary-bg); opacity: 1; }
+
+        .input-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .input-actions .btn { flex: 1; }
+
+        /* ===== LINK RESULTS ===== */
+        .link-results {
+            display: none;
         }
 
-        .btn-secondary {
-            background: #555;
-            color: #fff;
+        .link-results textarea {
+            background: var(--primary-bg);
+            min-height: 120px;
+            font-size: 13px;
         }
 
-        .btn-block {
-            width: 100%;
+        /* ===== AI RESULT ===== */
+        .result-box { display: none; }
+
+        .result-box textarea {
+            background: var(--primary-bg);
+            min-height: 160px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
             margin-top: 10px;
         }
 
-        .result-box {
-            display: none;
-            margin-top: 12px;
+        .copy-btn {
+            background: var(--primary-bg);
+            color: var(--text);
+            padding: 8px 18px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Quicksand', sans-serif;
+            cursor: pointer;
         }
 
-        .result-box textarea {
-            background: #fafafa;
-            min-height: 150px;
-        }
+        .copy-btn:hover { background: var(--border); }
+
+        .stats { font-size: 13px; color: var(--text-muted); font-weight: 600; }
 
         .status {
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 10px 14px;
+            border-radius: 8px;
             font-size: 13px;
-            margin-top: 8px;
+            font-weight: 600;
+            margin-top: 10px;
             display: none;
         }
 
-        .status.success { display: block; background: #e8f5e9; color: #2e7d32; }
-        .status.error { display: block; background: #ffebee; color: #c62828; }
-        .status.loading { display: block; background: #fff3e0; color: #e65100; }
+        .status.success { display: block; background: #E8F5E9; color: #2E7D32; }
+        .status.error { display: block; background: #FFEBEE; color: #C62828; }
+        .status.loading { display: block; background: #FFF3E0; color: #E65100; }
 
-        .stats {
-            font-size: 13px;
-            color: #777;
-            margin-top: 8px;
-        }
-
-        .history-item {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .history-item:last-child { border-bottom: none; }
-
-        .history-item:hover { background: #fafafa; }
-
-        .history-preview {
-            color: #999;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-        }
-
-        .history-time {
+        /* ===== FOOTER ===== */
+        .main-footer {
+            padding: 16px 32px;
+            text-align: center;
             font-size: 12px;
-            color: #bbb;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
         }
 
-        .copy-btn {
-            background: #f0f0f0;
-            color: #333;
-            padding: 6px 14px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-            margin-top: 8px;
+        .main-footer .accent { color: var(--primary); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .history-panel { transform: translateX(100%); }
+            .history-panel.open { transform: translateX(0); }
+            .main { margin-right: 0 !important; }
         }
 
-        .copy-btn:hover { background: #e0e0e0; }
-
-        .saved-badge {
-            display: inline-block;
-            background: #e8f5e9;
-            color: #2e7d32;
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-left: 8px;
-        }
-
-        @media (max-width: 600px) {
-            .container { padding: 10px; }
-            h1 { font-size: 17px; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-top { display: flex; }
+            .toggle-sidebar { display: block; }
+            .main { margin-left: 0; }
+            .main-header {
+                padding: 16px 16px;
+                padding-top: 50px;
+                text-align: center;
+            }
+            .main-header h2 { font-size: 20px; }
+            .main-header p { font-size: 12px; }
+            .page-title h3 { font-size: 22px; }
+            .main-body { padding: 14px; }
+            .main-footer { padding: 14px 16px; }
             .aff-row { flex-direction: column; }
+            .input-actions { flex-direction: column; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Shopee Affiliate Converter</h1>
 
-        <!-- Affiliate ID -->
-        <div class="section">
-            <div class="section-title">Affiliate ID</div>
-            <div class="aff-row">
-                <input type="text" id="affiliateId" placeholder="Nhập Affiliate ID"
-                       value="{{ affiliate_id }}">
-                <button class="btn btn-secondary" onclick="saveAffiliate()">Lưu</button>
+    <button class="toggle-sidebar" id="toggleSidebar" onclick="toggleSidebar()">&#9776;</button>
+    <button class="toggle-history" id="toggleHistory" onclick="toggleHistory()">Lịch sử</button>
+    <div class="overlay" id="overlay" onclick="closeAll()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" data-page="convert-link" onclick="switchPage('convert-link')">
+                Chuyển đổi Link
             </div>
-            <div id="affStatus" class="status"></div>
-        </div>
-
-        <!-- Input -->
-        <div class="section">
-            <div class="section-title">Nội dung tin nhắn</div>
-            <textarea id="messageInput" placeholder="Dán nội dung tin nhắn chứa link Shopee vào đây..."></textarea>
-            <button class="btn btn-primary btn-block" id="convertBtn" onclick="convert()">
-                Chuyển đổi
-            </button>
-            <div id="convertStatus" class="status"></div>
-        </div>
-
-        <!-- Result -->
-        <div class="section result-box" id="resultBox">
-            <div class="section-title">Kết quả</div>
-            <textarea id="resultOutput" readonly></textarea>
-            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <button class="copy-btn" onclick="copyResult()">Copy kết quả</button>
-                <span id="resultStats" class="stats"></span>
+            <div class="nav-item" data-page="ai-content" onclick="switchPage('ai-content')">
+                AI Tạo nội dung
             </div>
-        </div>
+        </nav>
+    </aside>
 
-        <!-- History -->
-        {% if history %}
-        <div class="section">
-            <div class="section-title">Lịch sử (gần nhất)</div>
+    <!-- HISTORY PANEL -->
+    <aside class="history-panel closed" id="historyPanel">
+        <div class="history-header">
+            <h3>Lịch sử chuyển đổi</h3>
+            <button class="history-close" onclick="toggleHistory()">&times;</button>
+        </div>
+        <div class="history-list" id="historyList">
             {% for item in history %}
-            <div class="history-item" onclick="loadHistory('{{ item.converted_message | e }}')">
-                <div class="history-preview">{{ item.converted_message[:80] }}</div>
+            <div class="history-item" onclick="loadHistory({{ item.id }})">
+                <div class="history-preview">{{ item.converted_message[:60] }}</div>
                 <div class="history-time">{{ item.created_at }}</div>
             </div>
             {% endfor %}
+            {% if not history %}
+            <div style="padding:24px 16px; font-size:13px; color:var(--text-muted); text-align:center; font-weight:600;">
+                Chưa có lịch sử
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
-    </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main" id="mainContent">
+        <div class="main-header" id="mainHeader">
+            <h2>Săn Sale Cùng Kim Ngân</h2>
+            <p>Chuyển đổi link Affiliate nhanh chóng</p>
+        </div>
+
+        <div class="main-body">
+
+            <!-- Affiliate ID (shared) -->
+            <div class="card">
+                <div class="card-title">Affiliate ID</div>
+                <div class="aff-row">
+                    <input type="text" id="affiliateId" placeholder="Nhập Affiliate ID của bạn"
+                           value="{{ affiliate_id }}">
+                    <button class="btn btn-dark" onclick="saveAffiliate()">Lưu</button>
+                </div>
+                <div id="affStatus" class="status"></div>
+            </div>
+
+            <!-- PAGE: CONVERT LINK (simple) -->
+            <div class="page active" id="page-convert-link">
+                <div class="page-title">
+                    <h3>Chuyển đổi Link</h3>
+                    <p>Dán link Shopee &mdash; Nhận link Affiliate ngay</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Nhập Link</div>
+                    <textarea id="linkInput" placeholder="Dán link Shopee vào đây (mỗi link 1 dòng)..." style="min-height:120px;"></textarea>
+                    <div class="input-actions">
+                        <button class="btn btn-outline" onclick="pasteLinkInput()">Paste nhanh</button>
+                        <button class="btn btn-primary" id="linkConvertBtn" onclick="convertLink()">Chuyển đổi</button>
+                    </div>
+                    <div id="linkStatus" class="status"></div>
+                </div>
+
+                <div class="card link-results" id="linkResults">
+                    <div class="card-title">Kết quả</div>
+                    <textarea id="linkResultOutput" readonly></textarea>
+                    <div style="margin-top:10px;">
+                        <button class="copy-btn" onclick="copyAllLinks()">Copy tất cả</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: AI CONTENT -->
+            <div class="page" id="page-ai-content">
+                <div class="page-title">
+                    <h3>AI Tạo Nội Dung</h3>
+                    <p>Dán tin nhắn &mdash; AI viết lại nội dung + gắn link Affiliate</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Nội dung tin nhắn</div>
+                    <textarea id="messageInput" placeholder="Dán nội dung tin nhắn chứa link Shopee vào đây..."></textarea>
+                    <div class="input-actions">
+                        <button class="btn btn-outline" onclick="pasteMessageInput()">Paste nhanh</button>
+                        <button class="btn btn-primary" id="aiConvertBtn" onclick="convertAI()">Tạo nội dung</button>
+                    </div>
+                    <div id="aiStatus" class="status"></div>
+                </div>
+
+                <div class="card result-box" id="aiResultBox">
+                    <div class="card-title">Kết quả</div>
+                    <textarea id="aiResultOutput" readonly></textarea>
+                    <div class="result-actions">
+                        <button class="copy-btn" onclick="copyAIResult()">Copy kết quả</button>
+                        <span id="aiResultStats" class="stats"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="main-footer">
+            &copy; 2026 <span class="accent">Săn Sale Cùng Kim Ngân</span> &middot; Dev by <span class="accent">Pham Toan</span>
+        </div>
+    </main>
 
     <script>
+        const historyData = {{ history | tojson }};
+        let sidebarOpen = false;
+        let historyOpen = false;
+
+        // ===== TOGGLE =====
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
+            document.getElementById('overlay').classList.toggle('active', sidebarOpen);
+        }
+
+        function toggleHistory() {
+            historyOpen = !historyOpen;
+            const panel = document.getElementById('historyPanel');
+            const main = document.getElementById('mainContent');
+
+            if (window.innerWidth > 1024) {
+                panel.classList.toggle('closed', !historyOpen);
+                main.classList.toggle('history-open', historyOpen);
+            } else {
+                panel.classList.toggle('open', historyOpen);
+                document.getElementById('overlay').classList.toggle('active', historyOpen);
+            }
+        }
+
+        function closeAll() {
+            sidebarOpen = false;
+            historyOpen = false;
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('historyPanel').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        // ===== PAGE SWITCH =====
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            document.querySelector('.nav-item[data-page="' + page + '"]').classList.add('active');
+            if (window.innerWidth <= 768) closeAll();
+        }
+
+        // ===== STATUS =====
         function showStatus(id, msg, type) {
             const el = document.getElementById(id);
             el.textContent = msg;
@@ -242,12 +615,24 @@
             document.getElementById(id).className = 'status';
         }
 
+        // ===== PASTE =====
+        async function pasteTo(inputId, statusId) {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById(inputId).value = text;
+            } catch (e) {
+                showStatus(statusId, 'Không thể paste. Hãy dùng Ctrl+V', 'error');
+                setTimeout(() => hideStatus(statusId), 3000);
+            }
+        }
+
+        function pasteLinkInput() { pasteTo('linkInput', 'linkStatus'); }
+        function pasteMessageInput() { pasteTo('messageInput', 'aiStatus'); }
+
+        // ===== SAVE AFFILIATE =====
         async function saveAffiliate() {
             const id = document.getElementById('affiliateId').value.trim();
-            if (!id) {
-                showStatus('affStatus', 'Vui lòng nhập Affiliate ID', 'error');
-                return;
-            }
+            if (!id) { showStatus('affStatus', 'Vui lòng nhập Affiliate ID', 'error'); return; }
 
             try {
                 const res = await fetch('/api/save-affiliate', {
@@ -257,7 +642,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showStatus('affStatus', 'Đã lưu Affiliate ID', 'success');
+                    showStatus('affStatus', 'Đã lưu thành công!', 'success');
                     setTimeout(() => hideStatus('affStatus'), 3000);
                 } else {
                     showStatus('affStatus', data.error, 'error');
@@ -267,17 +652,56 @@
             }
         }
 
-        async function convert() {
-            const message = document.getElementById('messageInput').value.trim();
-            if (!message) {
-                showStatus('convertStatus', 'Vui lòng nhập nội dung tin nhắn', 'error');
-                return;
-            }
+        // ===== CONVERT LINK (simple) =====
+        async function convertLink() {
+            const urls = document.getElementById('linkInput').value.trim();
+            if (!urls) { showStatus('linkStatus', 'Vui lòng nhập link', 'error'); return; }
 
-            const btn = document.getElementById('convertBtn');
-            btn.disabled = true;
-            btn.textContent = 'Đang xử lý...';
-            showStatus('convertStatus', 'Đang trích xuất link và chuyển đổi...', 'loading');
+            const btn = document.getElementById('linkConvertBtn');
+            btn.disabled = true; btn.textContent = 'Đang xử lý...';
+            showStatus('linkStatus', 'Đang chuyển đổi link...', 'loading');
+
+            try {
+                const res = await fetch('/api/convert-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ urls })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    hideStatus('linkStatus');
+                    const affLinks = data.results.map(r => r.affiliate).join('\n');
+                    document.getElementById('linkResultOutput').value = affLinks;
+                    document.getElementById('linkResults').style.display = 'block';
+                    window._linkResults = data.results;
+                } else {
+                    showStatus('linkStatus', data.error, 'error');
+                    document.getElementById('linkResults').style.display = 'none';
+                }
+            } catch (e) {
+                showStatus('linkStatus', 'Lỗi kết nối server', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Chuyển đổi';
+            }
+        }
+
+        function copyAllLinks() {
+            const el = document.getElementById('linkResultOutput');
+            el.select(); document.execCommand('copy');
+            const btn = event.target;
+            btn.textContent = 'Đã copy!';
+            setTimeout(() => btn.textContent = 'Copy tất cả', 2000);
+        }
+
+        // ===== AI CONVERT =====
+        async function convertAI() {
+            const message = document.getElementById('messageInput').value.trim();
+            if (!message) { showStatus('aiStatus', 'Vui lòng nhập nội dung tin nhắn', 'error'); return; }
+
+            const btn = document.getElementById('aiConvertBtn');
+            btn.disabled = true; btn.textContent = 'Đang xử lý...';
+            showStatus('aiStatus', 'Đang trích xuất link và tạo nội dung...', 'loading');
 
             try {
                 const res = await fetch('/api/convert', {
@@ -288,39 +712,67 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    document.getElementById('resultOutput').value = data.converted;
-                    document.getElementById('resultBox').style.display = 'block';
-                    document.getElementById('resultStats').textContent =
-                        `${data.links_converted}/${data.links_found} link đã chuyển đổi`;
-                    hideStatus('convertStatus');
+                    document.getElementById('aiResultOutput').value = data.converted;
+                    document.getElementById('aiResultBox').style.display = 'block';
+                    document.getElementById('aiResultStats').textContent =
+                        data.links_converted + '/' + data.links_found + ' link đã chuyển đổi';
+                    hideStatus('aiStatus');
+                    refreshHistory();
                 } else {
-                    showStatus('convertStatus', data.error, 'error');
-                    document.getElementById('resultBox').style.display = 'none';
+                    showStatus('aiStatus', data.error, 'error');
+                    document.getElementById('aiResultBox').style.display = 'none';
                 }
             } catch (e) {
-                showStatus('convertStatus', 'Lỗi kết nối server', 'error');
+                showStatus('aiStatus', 'Lỗi kết nối server', 'error');
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Chuyển đổi';
+                btn.disabled = false; btn.textContent = 'Tạo nội dung';
             }
         }
 
-        function copyResult() {
-            const el = document.getElementById('resultOutput');
-            el.select();
-            document.execCommand('copy');
+        function copyAIResult() {
+            const el = document.getElementById('aiResultOutput');
+            el.select(); document.execCommand('copy');
             const btn = event.target;
             btn.textContent = 'Đã copy!';
             setTimeout(() => btn.textContent = 'Copy kết quả', 2000);
         }
 
-        function loadHistory(text) {
-            // Decode HTML entities
-            const tmp = document.createElement('textarea');
-            tmp.innerHTML = text;
-            document.getElementById('resultOutput').value = tmp.value;
-            document.getElementById('resultBox').style.display = 'block';
-            document.getElementById('resultStats').textContent = 'Từ lịch sử';
+        // ===== HISTORY =====
+        function loadHistory(id) {
+            const item = historyData.find(h => h.id === id);
+            if (item) {
+                switchPage('ai-content');
+                document.getElementById('aiResultOutput').value = item.converted_message;
+                document.getElementById('aiResultBox').style.display = 'block';
+                document.getElementById('aiResultStats').textContent = 'Từ lịch sử';
+            }
+        }
+
+        async function refreshHistory() {
+            try {
+                const res = await fetch('/api/history');
+                const data = await res.json();
+                historyData.length = 0;
+                data.forEach(d => historyData.push(d));
+
+                const list = document.getElementById('historyList');
+                if (data.length === 0) {
+                    list.innerHTML = '<div style="padding:24px 16px;font-size:13px;color:var(--text-muted);text-align:center;font-weight:600;">Chưa có lịch sử</div>';
+                    return;
+                }
+                list.innerHTML = data.map(item =>
+                    '<div class="history-item" onclick="loadHistory(' + item.id + ')">' +
+                    '<div class="history-preview">' + escapeHtml(item.converted_message.substring(0, 60)) + '</div>' +
+                    '<div class="history-time">' + item.created_at + '</div>' +
+                    '</div>'
+                ).join('');
+            } catch (e) {}
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
         }
     </script>
 </body>
