@@ -21,11 +21,13 @@ CẤM TUYỆT ĐỐI:
 - Nếu muốn viết "link tại đây" thì viết text bình thường rồi xuống dòng hoặc dấu : rồi dán link luôn
 - Văn phong tự nhiên như người thật đăng bài, KHÔNG giống AI viết
 - KHÔNG mở bài sáo rỗng kiểu "Chào các chị em xinh đẹp"
+- TUYỆT ĐỐI KHÔNG ĐƯỢC SỬA, CẮT, RÚT GỌN link affiliate. Copy nguyên xi 100% link từ bảng chuyển đổi, bao gồm đầy đủ tham số sub_id với dấu --- ở cuối. Nếu link có sub_id=Knsansale-KnSaleMxh--- thì phải giữ nguyên y chang, KHÔNG ĐƯỢC bỏ dấu --- ở cuối.
 
 VÍ DỤ ĐÚNG CÁCH VIẾT:
-🌸 SHOPEEVIP: https://s.shopee.vn/xxxx
+🌸 SHOPEEVIP: https://s.shopee.vn/an_redir?origin_link=https%3A%2F%2Fshopee.vn%2Fproduct%2F123%2F456&affiliate_id=12345&sub_id=Knsansale-KnSaleMxh---
 👉🏻 0H: Mã 35% max 200K nha chị em~
-👉🏻 Link săn tại đây: https://s.shopee.vn/xxxx
+👉🏻 Link săn tại đây: https://s.shopee.vn/an_redir?origin_link=https%3A%2F%2Fshopee.vn%2Fproduct%2F789%2F012&affiliate_id=12345&sub_id=Knsansale-KnSaleMxh---
+(Lưu ý: sub_id luôn kết thúc bằng --- , KHÔNG ĐƯỢC bỏ)
 
 PHONG CÁCH:
 - Viết như chị em thật sự đang chia sẻ deal trong group

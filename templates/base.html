@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Săn Sale Cùng Kim Ngân{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #E8567F;
+            --primary-bg: #FFF5F7;
+            --card-bg: #FFFFFF;
+            --border: #F0D4DA;
+            --text: #2D2D2D;
+            --text-sec: #666666;
+            --text-muted: #999999;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== TOP NAV ===== */
+        .topnav {
+            background: var(--primary);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topnav-brand {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 22px;
+            font-weight: 700;
+            font-style: italic;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .topnav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topnav-link {
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 7px 16px;
+            border-radius: 6px;
+            border: 1.5px solid rgba(255,255,255,0.5);
+            transition: all 0.15s;
+        }
+
+        .topnav-link:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: #fff;
+        }
+
+        .topnav-user {
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        /* ===== FOOTER ===== */
+        .site-footer {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 18px 24px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+
+        .site-footer .accent { color: var(--primary); }
+
+        /* ===== SHARED ===== */
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Quicksand', sans-serif;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn:hover { opacity: 0.85; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-dark { background: var(--text); color: #fff; }
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+        }
+        .btn-outline:hover { background: var(--primary-bg); opacity: 1; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        input[type="text"], input[type="password"], textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: 'Quicksand', sans-serif;
+            color: var(--text);
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        input::placeholder, textarea::placeholder { color: #bbb; }
+
+        .status {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .status.success { display: block; background: #E8F5E9; color: #2E7D32; }
+        .status.error { display: block; background: #FFEBEE; color: #C62828; }
+        .status.loading { display: block; background: #FFF3E0; color: #E65100; }
+
+        @media (max-width: 768px) {
+            .topnav { padding: 12px 16px; }
+            .topnav-brand { font-size: 18px; }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <!-- TOP NAV -->
+    <nav class="topnav">
+        <a href="/" class="topnav-brand">Săn Sale Cùng Kim Ngân</a>
+        <div class="topnav-right">
+            {% if user %}
+                <span class="topnav-user">{{ user }}</span>
+                <a href="/logout" class="topnav-link">Đăng xuất</a>
+            {% else %}
+                <a href="/login" class="topnav-link">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        &copy; 2026 <span class="accent">Săn Sale Cùng Kim Ngân</span> &middot; Dev by <span class="accent">Pham Toan</span>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

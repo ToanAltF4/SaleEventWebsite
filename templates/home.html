@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Săn Sale Cùng Kim Ngân - Trang chủ{% endblock %}
+
+{% block extra_css %}
+    .hero {
+        text-align: center;
+        padding: 80px 24px 60px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hero h1 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 42px;
+        font-weight: 700;
+        font-style: italic;
+        color: var(--primary);
+        margin-bottom: 12px;
+    }
+
+    .hero p {
+        font-size: 16px;
+        color: var(--text-sec);
+        font-weight: 500;
+        max-width: 500px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    .hero-cta {
+        margin-top: 28px;
+    }
+
+    .hero-cta .btn {
+        padding: 14px 36px;
+        font-size: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .hero { padding: 40px 16px 28px; }
+        .hero h1 { font-size: 28px; }
+        .hero p { font-size: 14px; }
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="hero">
+        <h1>Săn Sale Cùng Kim Ngân</h1>
+        <p>Công cụ chuyển đổi link affiliate Shopee nhanh chóng. Tạo nội dung deal sale bằng AI chỉ trong vài giây.</p>
+        <div class="hero-cta">
+            {% if user %}
+                <a href="/admin" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Vào Dashboard</a>
+            {% else %}
+                <a href="/login" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Đăng nhập</a>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

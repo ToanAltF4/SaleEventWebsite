@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập - Săn Sale Cùng Kim Ngân{% endblock %}
+
+{% block extra_css %}
+    .login-wrapper {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+    }
+
+    .login-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 36px 32px;
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    .login-header h2 {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 26px;
+        font-weight: 700;
+        font-style: italic;
+        color: var(--primary);
+        margin-bottom: 6px;
+    }
+
+    .login-header p {
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .login-field {
+        margin-bottom: 16px;
+    }
+
+    .login-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-sec);
+        margin-bottom: 6px;
+    }
+
+    .login-btn {
+        width: 100%;
+        margin-top: 8px;
+        padding: 12px;
+        font-size: 15px;
+    }
+
+    .login-error {
+        background: #FFEBEE;
+        color: #C62828;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .login-card { padding: 28px 20px; }
+        .login-header h2 { font-size: 22px; }
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <h2>Đăng nhập</h2>
+                <p>Vui lòng đăng nhập để sử dụng dashboard</p>
+            </div>
+
+            {% if error %}
+            <div class="login-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/login">
+                <div class="login-field">
+                    <label>Tài khoản</label>
+                    <input type="text" name="username" placeholder="Nhập tên đăng nhập" required autofocus>
+                </div>
+                <div class="login-field">
+                    <label>Mật khẩu</label>
+                    <input type="password" name="password" placeholder="Nhập mật khẩu" required>
+                </div>
+                <button type="submit" class="btn btn-primary login-btn">Đăng nhập</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
