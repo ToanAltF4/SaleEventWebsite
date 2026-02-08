@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Affiliate Converter</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 600;
+            padding: 16px 0;
+            border-bottom: 2px solid #ee4d2d;
+            margin-bottom: 16px;
+            color: #222;
+        }
+
+        .section {
+            background: #fff;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .aff-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #ee4d2d;
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover { opacity: 0.85; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary {
+            background: #ee4d2d;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #555;
+            color: #fff;
+        }
+
+        .btn-block {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .result-box {
+            display: none;
+            margin-top: 12px;
+        }
+
+        .result-box textarea {
+            background: #fafafa;
+            min-height: 150px;
+        }
+
+        .status {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .status.success { display: block; background: #e8f5e9; color: #2e7d32; }
+        .status.error { display: block; background: #ffebee; color: #c62828; }
+        .status.loading { display: block; background: #fff3e0; color: #e65100; }
+
+        .stats {
+            font-size: 13px;
+            color: #777;
+            margin-top: 8px;
+        }
+
+        .history-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .history-item:hover { background: #fafafa; }
+
+        .history-preview {
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: #bbb;
+        }
+
+        .copy-btn {
+            background: #f0f0f0;
+            color: #333;
+            padding: 6px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .copy-btn:hover { background: #e0e0e0; }
+
+        .saved-badge {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            h1 { font-size: 17px; }
+            .aff-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shopee Affiliate Converter</h1>
+
+        <!-- Affiliate ID -->
+        <div class="section">
+            <div class="section-title">Affiliate ID</div>
+            <div class="aff-row">
+                <input type="text" id="affiliateId" placeholder="Nhập Affiliate ID"
+                       value="{{ affiliate_id }}">
+                <button class="btn btn-secondary" onclick="saveAffiliate()">Lưu</button>
+            </div>
+            <div id="affStatus" class="status"></div>
+        </div>
+
+        <!-- Input -->
+        <div class="section">
+            <div class="section-title">Nội dung tin nhắn</div>
+            <textarea id="messageInput" placeholder="Dán nội dung tin nhắn chứa link Shopee vào đây..."></textarea>
+            <button class="btn btn-primary btn-block" id="convertBtn" onclick="convert()">
+                Chuyển đổi
+            </button>
+            <div id="convertStatus" class="status"></div>
+        </div>
+
+        <!-- Result -->
+        <div class="section result-box" id="resultBox">
+            <div class="section-title">Kết quả</div>
+            <textarea id="resultOutput" readonly></textarea>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button class="copy-btn" onclick="copyResult()">Copy kết quả</button>
+                <span id="resultStats" class="stats"></span>
+            </div>
+        </div>
+
+        <!-- History -->
+        {% if history %}
+        <div class="section">
+            <div class="section-title">Lịch sử (gần nhất)</div>
+            {% for item in history %}
+            <div class="history-item" onclick="loadHistory('{{ item.converted_message | e }}')">
+                <div class="history-preview">{{ item.converted_message[:80] }}</div>
+                <div class="history-time">{{ item.created_at }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function showStatus(id, msg, type) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.className = 'status ' + type;
+        }
+
+        function hideStatus(id) {
+            document.getElementById(id).className = 'status';
+        }
+
+        async function saveAffiliate() {
+            const id = document.getElementById('affiliateId').value.trim();
+            if (!id) {
+                showStatus('affStatus', 'Vui lòng nhập Affiliate ID', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/save-affiliate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ affiliate_id: id })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showStatus('affStatus', 'Đã lưu Affiliate ID', 'success');
+                    setTimeout(() => hideStatus('affStatus'), 3000);
+                } else {
+                    showStatus('affStatus', data.error, 'error');
+                }
+            } catch (e) {
+                showStatus('affStatus', 'Lỗi kết nối', 'error');
+            }
+        }
+
+        async function convert() {
+            const message = document.getElementById('messageInput').value.trim();
+            if (!message) {
+                showStatus('convertStatus', 'Vui lòng nhập nội dung tin nhắn', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('convertBtn');
+            btn.disabled = true;
+            btn.textContent = 'Đang xử lý...';
+            showStatus('convertStatus', 'Đang trích xuất link và chuyển đổi...', 'loading');
+
+            try {
+                const res = await fetch('/api/convert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('resultOutput').value = data.converted;
+                    document.getElementById('resultBox').style.display = 'block';
+                    document.getElementById('resultStats').textContent =
+                        `${data.links_converted}/${data.links_found} link đã chuyển đổi`;
+                    hideStatus('convertStatus');
+                } else {
+                    showStatus('convertStatus', data.error, 'error');
+                    document.getElementById('resultBox').style.display = 'none';
+                }
+            } catch (e) {
+                showStatus('convertStatus', 'Lỗi kết nối server', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Chuyển đổi';
+            }
+        }
+
+        function copyResult() {
+            const el = document.getElementById('resultOutput');
+            el.select();
+            document.execCommand('copy');
+            const btn = event.target;
+            btn.textContent = 'Đã copy!';
+            setTimeout(() => btn.textContent = 'Copy kết quả', 2000);
+        }
+
+        function loadHistory(text) {
+            // Decode HTML entities
+            const tmp = document.createElement('textarea');
+            tmp.innerHTML = text;
+            document.getElementById('resultOutput').value = tmp.value;
+            document.getElementById('resultBox').style.display = 'block';
+            document.getElementById('resultStats').textContent = 'Từ lịch sử';
+        }
+    </script>
+</body>
+</html>
