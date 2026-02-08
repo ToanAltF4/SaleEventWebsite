@@ -202,11 +202,43 @@
     .home-status.error { display: block; background: #FFEBEE; color: #C62828; }
     .home-status.loading { display: block; background: #FFF3E0; color: #E65100; }
 
+    .promo-instruction {
+        width: 100%;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--primary);
+        line-height: 1.6;
+        margin-top: 6px;
+    }
+
+    .fb-post-btn {
+        width: 100%;
+        padding: 13px;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        font-family: 'Quicksand', sans-serif;
+        cursor: pointer;
+        color: #fff;
+        background: #1877F2;
+        text-decoration: none;
+        text-align: center;
+        display: block;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+    }
+    .fb-post-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(24, 119, 242, 0.4);
+    }
+
     .promo-img {
         width: 100%;
         max-width: 480px;
         border-radius: 14px;
-        margin-top: 8px;
         object-fit: cover;
     }
 
@@ -224,8 +256,7 @@
 {% endblock %}
 
 {% block content %}
-    {% if user %}
-    <!-- CONVERTER FOR LOGGED-IN USER -->
+    <!-- CONVERTER FOR EVERYONE -->
     <div class="converter-section">
         <div class="converter-wrap">
             <div class="converter-title">Tạo Link Mua Hàng Mã Độc Quyền Facebook</div>
@@ -255,25 +286,15 @@
                 <a href="#" class="visit-btn" id="homeVisitBtn" target="_blank">🔗 Truy cập link</a>
             </div>
 
-            <!-- Promo image -->
-            <img src="/static/20%.jpg" alt="Mã giảm 20%" class="promo-img">
+            <!-- Promo section -->
+            <div class="promo-instruction">Dán link sản phẩm vào bài viết bên dưới và click vào link trong cmt để có mã độc quyền Facebook</div>
+            <a href="https://www.facebook.com/share/p/1C4do57ne2/" target="_blank" class="fb-post-btn">Truy cập bài viết</a>
+            <img src="/static/promo-20.jpg" alt="Mã giảm 20%" class="promo-img">
         </div>
     </div>
-
-    {% else %}
-    <!-- HERO FOR GUEST -->
-    <div class="hero">
-        <h1>Săn Sale Cùng Kim Ngân</h1>
-        <p>Công cụ chuyển đổi link affiliate Shopee nhanh chóng. Tạo nội dung deal sale bằng AI chỉ trong vài giây.</p>
-        <div class="hero-cta">
-            <a href="/login" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Đăng nhập</a>
-        </div>
-    </div>
-    {% endif %}
 {% endblock %}
 
 {% block scripts %}
-{% if user %}
 <script>
     function homeShowStatus(msg, type) {
         const el = document.getElementById('homeStatus');
@@ -319,7 +340,7 @@
         homeShowStatus('Đang chuyển đổi link...', 'loading');
 
         try {
-            const res = await fetch('/api/convert-link', {
+            const res = await fetch('/api/public-convert-link', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ urls: input })
@@ -334,8 +355,7 @@
                 } else {
                     homeHideStatus();
                     document.getElementById('homeResultOutput').value = affLink;
-                    const fbRedirect = 'https://l.facebook.com/l.php?u=' + encodeURIComponent(affLink);
-                    document.getElementById('homeVisitBtn').href = fbRedirect;
+                    document.getElementById('homeVisitBtn').href = affLink;
                     document.getElementById('homeResultBlock').classList.add('show');
                 }
             } else {
@@ -355,5 +375,4 @@
         if (e.key === 'Enter') homeConvert();
     });
 </script>
-{% endif %}
 {% endblock %}

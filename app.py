@@ -253,6 +253,40 @@ def save_affiliate():
     return jsonify({"success": True, "affiliate_id": affiliate_id})
 
 
+@app.route("/api/public-convert-link", methods=["POST"])
+def public_convert_link():
+    data = request.json
+    raw_urls = data.get("urls", "").strip()
+    if not raw_urls:
+        return jsonify({"error": "Vui lòng nhập ít nhất 1 link"}), 400
+
+    affiliate_id = get_setting("affiliate_id", "")
+    if not affiliate_id:
+        return jsonify({"error": "Hệ thống chưa được cấu hình. Vui lòng liên hệ admin."}), 400
+
+    lines = raw_urls.splitlines()
+    results = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        found = extract_urls_from_text(line)
+        if found:
+            for url in found:
+                aff_url, _ = process_single_url(url, affiliate_id)
+                results.append({"original": url, "affiliate": aff_url or "Không hỗ trợ"})
+        elif line.startswith(("http", "s.shopee", "shopee")):
+            if not line.startswith("http"):
+                line = "https://" + line
+            aff_url, _ = process_single_url(line, affiliate_id)
+            results.append({"original": line, "affiliate": aff_url or "Không hỗ trợ"})
+
+    if not results:
+        return jsonify({"error": "Không tìm thấy link hợp lệ"}), 400
+
+    return jsonify({"success": True, "results": results})
+
+
 @app.route("/api/convert-link", methods=["POST"])
 @login_required
 def convert_link():
