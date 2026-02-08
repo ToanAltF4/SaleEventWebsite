@@ -301,8 +301,6 @@ def convert():
         return jsonify({"error": "Vui lòng cài đặt Affiliate ID trước"}), 400
 
     urls = extract_urls_from_text(message)
-    if not urls:
-        return jsonify({"error": "Không tìm thấy link nào trong tin nhắn"}), 400
 
     link_mapping = {}
     for url in urls:
@@ -310,12 +308,12 @@ def convert():
         if aff_url:
             link_mapping[url] = aff_url
 
-    if not link_mapping:
-        return jsonify({"error": "Không thể chuyển đổi link nào (không tìm thấy link Shopee)"}), 400
-
-    mapping_text = "\n".join(
-        f"- {orig} -> {aff}" for orig, aff in link_mapping.items()
-    )
+    if link_mapping:
+        mapping_text = "\n".join(
+            f"- {orig} -> {aff}" for orig, aff in link_mapping.items()
+        )
+    else:
+        mapping_text = "(Không có link Shopee cần chuyển đổi. Giữ nguyên tất cả link trong tin nhắn.)"
 
     prompt_template = load_verify_prompt()
     prompt = prompt_template.replace("{original_message}", message).replace(

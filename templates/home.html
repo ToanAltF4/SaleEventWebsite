@@ -39,23 +39,321 @@
         font-size: 16px;
     }
 
+    /* ===== CONVERTER SECTION ===== */
+    .converter-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px 16px 24px;
+        width: 100%;
+    }
+
+    .converter-wrap {
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .converter-title {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 28px;
+        font-weight: 700;
+        font-style: italic;
+        color: var(--primary);
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .converter-block {
+        width: 100%;
+        background: var(--card-bg);
+        border-radius: 14px;
+        border: 1.5px solid var(--border);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .converter-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-sec);
+        white-space: nowrap;
+    }
+
+    .input-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .input-row input {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .paste-btn, .copy-btn-home, .visit-btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: 'Quicksand', sans-serif;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .paste-btn {
+        background: var(--primary-bg);
+        color: var(--primary);
+        border: 1.5px solid var(--border);
+    }
+    .paste-btn:hover { background: var(--border); }
+
+    .copy-btn-home {
+        background: var(--primary-bg);
+        color: var(--primary);
+        border: 1.5px solid var(--border);
+    }
+    .copy-btn-home:hover { background: var(--border); }
+
+    .visit-btn {
+        background: var(--primary);
+        color: #fff;
+        text-decoration: none;
+        justify-content: center;
+    }
+    .visit-btn:hover { opacity: 0.85; }
+
+    .convert-btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        font-family: 'Quicksand', sans-serif;
+        cursor: pointer;
+        color: #fff;
+        background: linear-gradient(135deg, var(--primary), #F78DA7);
+        box-shadow: 0 4px 16px rgba(232, 86, 127, 0.3);
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .convert-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(232, 86, 127, 0.4);
+    }
+    .convert-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .result-block {
+        width: 100%;
+        background: var(--card-bg);
+        border-radius: 14px;
+        border: 1.5px solid var(--border);
+        padding: 16px;
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .result-block.show {
+        display: flex;
+    }
+
+    .result-input {
+        background: var(--primary-bg) !important;
+        border-color: var(--border) !important;
+    }
+
+    .result-actions-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .result-actions-row .copy-btn-home { flex: 1; justify-content: center; }
+    .result-actions-row .visit-btn { flex: 1; }
+
+    .home-status {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        display: none;
+    }
+    .home-status.success { display: block; background: #E8F5E9; color: #2E7D32; }
+    .home-status.error { display: block; background: #FFEBEE; color: #C62828; }
+    .home-status.loading { display: block; background: #FFF3E0; color: #E65100; }
+
+    .promo-img {
+        width: 100%;
+        max-width: 480px;
+        border-radius: 14px;
+        margin-top: 8px;
+        object-fit: cover;
+    }
+
     @media (max-width: 768px) {
         .hero { padding: 40px 16px 28px; }
         .hero h1 { font-size: 28px; }
         .hero p { font-size: 14px; }
+
+        .converter-section { padding: 24px 14px 20px; }
+        .converter-wrap { max-width: 100%; }
+        .converter-title { font-size: 22px; }
+        .converter-block, .result-block { padding: 14px; }
+        .convert-btn { padding: 13px; font-size: 14px; }
     }
 {% endblock %}
 
 {% block content %}
+    {% if user %}
+    <!-- CONVERTER FOR LOGGED-IN USER -->
+    <div class="converter-section">
+        <div class="converter-wrap">
+            <div class="converter-title">Tạo Link Mua Hàng Mã Độc Quyền Facebook</div>
+
+            <!-- Input block -->
+            <div class="converter-block">
+                <div class="converter-label">Link gốc Shopee</div>
+                <div class="input-row">
+                    <input type="text" id="homeUrlInput" placeholder="Dán link Shopee vào đây...">
+                    <button class="paste-btn" onclick="homePaste()">Paste</button>
+                </div>
+            </div>
+
+            <!-- Convert button -->
+            <button class="convert-btn" id="homeConvertBtn" onclick="homeConvert()">Tạo link nhận mã 20% Facebook</button>
+
+            <!-- Status -->
+            <div class="home-status" id="homeStatus"></div>
+
+            <!-- Result block -->
+            <div class="result-block" id="homeResultBlock">
+                <div class="converter-label">Link Affiliate đã tạo</div>
+                <div class="input-row">
+                    <input type="text" id="homeResultOutput" class="result-input" readonly placeholder="Link sẽ hiển thị ở đây...">
+                    <button class="copy-btn-home" onclick="homeCopy()">Copy</button>
+                </div>
+                <a href="#" class="visit-btn" id="homeVisitBtn" target="_blank">🔗 Truy cập link</a>
+            </div>
+
+            <!-- Promo image -->
+            <img src="/static/20%.jpg" alt="Mã giảm 20%" class="promo-img">
+        </div>
+    </div>
+
+    {% else %}
+    <!-- HERO FOR GUEST -->
     <div class="hero">
         <h1>Săn Sale Cùng Kim Ngân</h1>
         <p>Công cụ chuyển đổi link affiliate Shopee nhanh chóng. Tạo nội dung deal sale bằng AI chỉ trong vài giây.</p>
         <div class="hero-cta">
-            {% if user %}
-                <a href="/admin" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Vào Dashboard</a>
-            {% else %}
-                <a href="/login" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Đăng nhập</a>
-            {% endif %}
+            <a href="/login" class="btn btn-primary" style="text-decoration:none; display:inline-block;">Đăng nhập</a>
         </div>
     </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if user %}
+<script>
+    function homeShowStatus(msg, type) {
+        const el = document.getElementById('homeStatus');
+        el.textContent = msg;
+        el.className = 'home-status ' + type;
+    }
+
+    function homeHideStatus() {
+        document.getElementById('homeStatus').className = 'home-status';
+    }
+
+    async function homePaste() {
+        try {
+            const text = await navigator.clipboard.readText();
+            document.getElementById('homeUrlInput').value = text;
+        } catch (e) {
+            homeShowStatus('Không thể paste. Hãy dùng Ctrl+V', 'error');
+            setTimeout(homeHideStatus, 3000);
+        }
+    }
+
+    function homeCopy() {
+        const el = document.getElementById('homeResultOutput');
+        el.select();
+        document.execCommand('copy');
+        const btn = el.parentElement.querySelector('.copy-btn-home');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '✅ Đã copy!';
+        setTimeout(() => btn.innerHTML = orig, 2000);
+    }
+
+    async function homeConvert() {
+        const input = document.getElementById('homeUrlInput').value.trim();
+        if (!input) {
+            homeShowStatus('Vui lòng nhập link Shopee', 'error');
+            setTimeout(homeHideStatus, 3000);
+            return;
+        }
+
+        const btn = document.getElementById('homeConvertBtn');
+        btn.disabled = true;
+        btn.textContent = 'Đang xử lý...';
+        homeShowStatus('Đang chuyển đổi link...', 'loading');
+
+        try {
+            const res = await fetch('/api/convert-link', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ urls: input })
+            });
+            const data = await res.json();
+
+            if (data.success && data.results && data.results.length > 0) {
+                const affLink = data.results[0].affiliate;
+                if (affLink === 'Không hỗ trợ') {
+                    homeShowStatus('Link không hỗ trợ. Vui lòng nhập link Shopee hợp lệ.', 'error');
+                    document.getElementById('homeResultBlock').classList.remove('show');
+                } else {
+                    homeHideStatus();
+                    document.getElementById('homeResultOutput').value = affLink;
+                    const fbRedirect = 'https://l.facebook.com/l.php?u=' + encodeURIComponent(affLink);
+                    document.getElementById('homeVisitBtn').href = fbRedirect;
+                    document.getElementById('homeResultBlock').classList.add('show');
+                }
+            } else {
+                homeShowStatus(data.error || 'Không tìm thấy link hợp lệ', 'error');
+                document.getElementById('homeResultBlock').classList.remove('show');
+            }
+        } catch (e) {
+            homeShowStatus('Lỗi kết nối server', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Tạo link nhận mã 20% Facebook';
+        }
+    }
+
+    // Enter key to convert
+    document.getElementById('homeUrlInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') homeConvert();
+    });
+</script>
+{% endif %}
 {% endblock %}
