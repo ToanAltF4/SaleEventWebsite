@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Test Custom Link API{% endblock %}
+
+{% block extra_css %}
+.test-wrap {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.test-wrap .card { margin-bottom: 16px; }
+
+.test-wrap textarea {
+    min-height: 80px;
+    resize: vertical;
+    font-size: 13px;
+}
+
+.test-wrap .result-json {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+    margin-top: 12px;
+    line-height: 1.5;
+}
+
+.test-wrap .result-json .key { color: #9cdcfe; }
+.test-wrap .result-json .str { color: #ce9178; }
+.test-wrap .result-json .num { color: #b5cea8; }
+
+.test-wrap label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-sec);
+    margin-bottom: 6px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="test-wrap">
+    <div style="text-align:center;margin-bottom:20px;">
+        <h2 style="font-family:'Playfair Display',Georgia,serif;font-size:26px;font-weight:700;font-style:italic;color:var(--primary);">Test Custom Link API</h2>
+        <p style="font-size:13px;color:var(--text-sec);margin-top:4px;">Gọi Shopee Affiliate GraphQL API</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Cookie</div>
+        <textarea id="cookieInput" placeholder="Dán cookie từ affiliate.shopee.vn vào đây..."></textarea>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Original Link</div>
+        <input type="text" id="linkInput" placeholder="https://shopee.vn/product/420476723/22176845496">
+    </div>
+
+    <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" id="testBtn" onclick="testCustomLink()" style="flex:1;">Gửi Request</button>
+        <button class="btn btn-outline" onclick="clearAll()">Xoá</button>
+    </div>
+
+    <div id="testStatus" class="status"></div>
+
+    <div class="card" id="resultCard" style="display:none;margin-top:16px;">
+        <div class="card-title">Response</div>
+
+        <div id="summaryBox" style="display:none;margin-bottom:12px;">
+            <label>Short Link</label>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                <input type="text" id="shortLinkOut" readonly style="background:var(--primary-bg);font-weight:700;">
+                <button class="btn btn-dark" onclick="copyVal('shortLinkOut',this)" style="padding:10px 16px;">Copy</button>
+            </div>
+            <label>Long Link</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="longLinkOut" readonly style="background:var(--primary-bg);font-size:12px;">
+                <button class="btn btn-dark" onclick="copyVal('longLinkOut',this)" style="padding:10px 16px;">Copy</button>
+            </div>
+        </div>
+
+        <label>Raw JSON</label>
+        <div class="result-json" id="jsonOutput"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showStatus(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'status ' + type;
+}
+
+function hideStatus(id) {
+    document.getElementById(id).className = 'status';
+}
+
+function copyVal(fieldId, btn) {
+    const el = document.getElementById(fieldId);
+    el.select();
+    document.execCommand('copy');
+    const orig = btn.textContent;
+    btn.textContent = 'OK!';
+    setTimeout(() => btn.textContent = orig, 1500);
+}
+
+function syntaxHighlight(json) {
+    const str = JSON.stringify(json, null, 2);
+    return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                return '<span class="key">' + match + '</span>';
+            }
+            return '<span class="str">' + match + '</span>';
+        }
+        return '<span class="num">' + match + '</span>';
+    });
+}
+
+async function testCustomLink() {
+    const cookie = document.getElementById('cookieInput').value.trim();
+    const link = document.getElementById('linkInput').value.trim();
+
+    if (!cookie) { showStatus('testStatus', 'Vui long nhap cookie', 'error'); return; }
+    if (!link) { showStatus('testStatus', 'Vui long nhap link', 'error'); return; }
+
+    const btn = document.getElementById('testBtn');
+    btn.disabled = true;
+    btn.textContent = 'Dang gui...';
+    showStatus('testStatus', 'Dang goi API Shopee...', 'loading');
+
+    try {
+        const res = await fetch('/api/custom-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cookie: cookie, original_link: link })
+        });
+        const data = await res.json();
+
+        document.getElementById('resultCard').style.display = 'block';
+        const jsonEl = document.getElementById('jsonOutput');
+        jsonEl.innerHTML = syntaxHighlight(data);
+        jsonEl.style.display = 'block';
+
+        // Parse summary
+        const summaryBox = document.getElementById('summaryBox');
+        if (data.data && data.data.batchCustomLink && data.data.batchCustomLink[0]) {
+            const result = data.data.batchCustomLink[0];
+            if (result.failCode === 0) {
+                document.getElementById('shortLinkOut').value = result.shortLink || '';
+                document.getElementById('longLinkOut').value = result.longLink || '';
+                summaryBox.style.display = 'block';
+                showStatus('testStatus', 'Thanh cong!', 'success');
+            } else {
+                summaryBox.style.display = 'none';
+                showStatus('testStatus', 'Shopee tra ve failCode: ' + result.failCode, 'error');
+            }
+        } else if (data.error) {
+            summaryBox.style.display = 'none';
+            showStatus('testStatus', data.error, 'error');
+        } else {
+            summaryBox.style.display = 'none';
+            showStatus('testStatus', 'Response khong dung format mong doi', 'error');
+        }
+    } catch (e) {
+        showStatus('testStatus', 'Loi ket noi: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Gui Request';
+    }
+}
+
+function clearAll() {
+    document.getElementById('cookieInput').value = '';
+    document.getElementById('linkInput').value = '';
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('summaryBox').style.display = 'none';
+    document.getElementById('jsonOutput').style.display = 'none';
+    hideStatus('testStatus');
+}
+</script>
+{% endblock %}

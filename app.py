@@ -1,6 +1,8 @@
 import os
 import re
+import json as json_lib
 import requests
+from curl_cffi import requests as cffi_requests
 from urllib.parse import urlparse, quote, parse_qs, urlencode, urlunparse, unquote
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from functools import wraps
@@ -307,6 +309,12 @@ def admin_click_report():
     )
 
 
+@app.route("/test")
+@login_required
+def test_custom_link():
+    return render_template("test_custom_link.html", user=session.get("user"))
+
+
 @app.route("/s/<short_code>")
 def short_redirect(short_code):
     link = get_short_link(short_code)
@@ -466,6 +474,57 @@ def convert():
         "links_converted": len(link_mapping),
         "mapping": short_mapping,
     })
+
+
+@app.route("/api/custom-link", methods=["POST"])
+@login_required
+def custom_link():
+    data = request.json
+    cookie = data.get("cookie", "").strip()
+    original_link = data.get("original_link", "").strip()
+
+    if not cookie:
+        return jsonify({"error": "Cookie không được để trống"}), 400
+    if not original_link:
+        return jsonify({"error": "Link gốc không được để trống"}), 400
+
+    payload = {
+        "operationName": "batchGetCustomLink",
+        "query": """
+    query batchGetCustomLink($linkParams: [CustomLinkParam!], $sourceCaller: SourceCaller){
+      batchCustomLink(linkParams: $linkParams, sourceCaller: $sourceCaller){
+        shortLink
+        longLink
+        failCode
+      }
+    }
+    """,
+        "variables": {
+            "linkParams": [
+                {"originalLink": original_link, "advancedLinkParams": {}}
+            ],
+            "sourceCaller": "CUSTOM_LINK_CALLER",
+        },
+    }
+
+    headers = {
+        "content-type": "application/json; charset=UTF-8",
+        "affiliate-program-type": "1",
+        "x-sz-sdk-version": "1.12.21",
+        "cookie": cookie,
+    }
+
+    try:
+        resp = cffi_requests.post(
+            "https://affiliate.shopee.vn/api/v3/gql?q=batchCustomLink",
+            data=json_lib.dumps(payload),
+            headers=headers,
+            timeout=15,
+            impersonate="chrome",
+        )
+        return jsonify(resp.json()), resp.status_code
+    except Exception as e:
+        return jsonify({"error": f"Lỗi kết nối Shopee: {str(e)}"}), 500
 
 
 @app.route("/api/history")
