@@ -309,12 +309,6 @@ def admin_click_report():
     )
 
 
-@app.route("/test")
-@login_required
-def test_custom_link():
-    return render_template("test_custom_link.html", user=session.get("user"))
-
-
 @app.route("/s/<short_code>")
 def short_redirect(short_code):
     link = get_short_link(short_code)
@@ -328,6 +322,24 @@ def short_redirect(short_code):
 #  API
 # ============================================================
 
+@app.route("/api/save-cookie", methods=["POST"])
+@login_required
+def save_cookie():
+    data = request.json
+    cookie = data.get("cookie", "").strip()
+    if not cookie:
+        return jsonify({"error": "Cookie không được để trống"}), 400
+    set_setting("shopee_cookie", cookie)
+    return jsonify({"success": True})
+
+
+@app.route("/api/get-cookie", methods=["GET"])
+@login_required
+def get_cookie():
+    cookie = get_setting("shopee_cookie", "")
+    return jsonify({"cookie": cookie})
+
+
 @app.route("/api/save-affiliate", methods=["POST"])
 @login_required
 def save_affiliate():
@@ -337,6 +349,102 @@ def save_affiliate():
         return jsonify({"error": "Affiliate ID không được để trống"}), 400
     set_setting("affiliate_id", affiliate_id)
     return jsonify({"success": True, "affiliate_id": affiliate_id})
+
+
+@app.route("/api/public-custom-link", methods=["POST"])
+@limiter.limit("50 per hour", exempt_when=lambda: "user" in session)
+def public_custom_link():
+    """Gọi Shopee Custom Link API với cookie đã lưu. Dùng cho trang chủ."""
+    data = request.json
+    raw_url = data.get("url", "").strip()
+    if not raw_url:
+        return jsonify({"error": "Vui lòng nhập link"}), 400
+
+    cookie = get_setting("shopee_cookie", "")
+    if not cookie:
+        return jsonify({"error": "Chưa cấu hình cookie"}), 400
+
+    # Xử lý URL: expand short URL, extract từ affiliate redirect, clean tracking params
+    if not raw_url.startswith("http"):
+        raw_url = "https://" + raw_url
+
+    url = raw_url
+    if is_affiliate_redirect(url):
+        origin = extract_origin_from_redirect(url)
+        if origin:
+            url = origin
+
+    if is_short_url(url):
+        expanded = expand_short_url(url)
+        if expanded:
+            url = expanded
+            if is_affiliate_redirect(url):
+                origin = extract_origin_from_redirect(url)
+                if origin:
+                    url = origin
+
+    if not is_shopee_url(url):
+        return jsonify({"error": "Không phải link Shopee"}), 400
+
+    url = clean_shopee_url(url)
+
+    # Chuẩn hoá thành dạng product URL nếu có shop_id/item_id
+    shop_id, item_id = extract_shop_item_id(url)
+    if shop_id and item_id:
+        original_link = f"https://shopee.vn/product/{shop_id}/{item_id}"
+    else:
+        original_link = url
+
+    # Gọi Shopee Custom Link API
+    payload = {
+        "operationName": "batchGetCustomLink",
+        "query": """
+    query batchGetCustomLink($linkParams: [CustomLinkParam!], $sourceCaller: SourceCaller){
+      batchCustomLink(linkParams: $linkParams, sourceCaller: $sourceCaller){
+        shortLink
+        longLink
+        failCode
+      }
+    }
+    """,
+        "variables": {
+            "linkParams": [
+                {"originalLink": original_link, "advancedLinkParams": {}}
+            ],
+            "sourceCaller": "CUSTOM_LINK_CALLER",
+        },
+    }
+
+    headers = {
+        "content-type": "application/json; charset=UTF-8",
+        "affiliate-program-type": "1",
+        "x-sz-sdk-version": "1.12.21",
+        "cookie": cookie,
+    }
+
+    try:
+        resp = cffi_requests.post(
+            "https://affiliate.shopee.vn/api/v3/gql?q=batchCustomLink",
+            data=json_lib.dumps(payload),
+            headers=headers,
+            timeout=15,
+            impersonate="chrome",
+        )
+        result = resp.json()
+
+        # Parse kết quả
+        if (result.get("data")
+                and result["data"].get("batchCustomLink")
+                and len(result["data"]["batchCustomLink"]) > 0):
+            item = result["data"]["batchCustomLink"][0]
+            if item.get("failCode") == 0 and item.get("shortLink"):
+                return jsonify({"success": True, "short_link": item["shortLink"]})
+            else:
+                return jsonify({"error": f"Shopee API failCode: {item.get('failCode')}"}), 400
+        else:
+            return jsonify({"error": "Response không đúng format"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Lỗi kết nối Shopee: {str(e)}"}), 500
 
 
 @app.route("/api/public-convert-link", methods=["POST"])
@@ -474,57 +582,6 @@ def convert():
         "links_converted": len(link_mapping),
         "mapping": short_mapping,
     })
-
-
-@app.route("/api/custom-link", methods=["POST"])
-@login_required
-def custom_link():
-    data = request.json
-    cookie = data.get("cookie", "").strip()
-    original_link = data.get("original_link", "").strip()
-
-    if not cookie:
-        return jsonify({"error": "Cookie không được để trống"}), 400
-    if not original_link:
-        return jsonify({"error": "Link gốc không được để trống"}), 400
-
-    payload = {
-        "operationName": "batchGetCustomLink",
-        "query": """
-    query batchGetCustomLink($linkParams: [CustomLinkParam!], $sourceCaller: SourceCaller){
-      batchCustomLink(linkParams: $linkParams, sourceCaller: $sourceCaller){
-        shortLink
-        longLink
-        failCode
-      }
-    }
-    """,
-        "variables": {
-            "linkParams": [
-                {"originalLink": original_link, "advancedLinkParams": {}}
-            ],
-            "sourceCaller": "CUSTOM_LINK_CALLER",
-        },
-    }
-
-    headers = {
-        "content-type": "application/json; charset=UTF-8",
-        "affiliate-program-type": "1",
-        "x-sz-sdk-version": "1.12.21",
-        "cookie": cookie,
-    }
-
-    try:
-        resp = cffi_requests.post(
-            "https://affiliate.shopee.vn/api/v3/gql?q=batchCustomLink",
-            data=json_lib.dumps(payload),
-            headers=headers,
-            timeout=15,
-            impersonate="chrome",
-        )
-        return jsonify(resp.json()), resp.status_code
-    except Exception as e:
-        return jsonify({"error": f"Lỗi kết nối Shopee: {str(e)}"}), 500
 
 
 @app.route("/api/history")

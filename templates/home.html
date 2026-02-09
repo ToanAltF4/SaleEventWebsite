@@ -343,35 +343,60 @@
         btn.textContent = 'Đang xử lý...';
         homeShowStatus('Đang chuyển đổi link...', 'loading');
 
+        let apiSuccess = false;
+
         try {
-            const res = await fetch('/api/public-convert-link', {
+            // Thử gọi Shopee Custom Link API trước
+            const customRes = await fetch('/api/public-custom-link', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ urls: input })
+                body: JSON.stringify({ url: input })
             });
-            const data = await res.json();
+            const customData = await customRes.json();
 
-            if (data.success && data.results && data.results.length > 0) {
-                const affLink = data.results[0].affiliate;
-                if (affLink === 'Không hỗ trợ') {
-                    homeShowStatus('Link không hỗ trợ. Vui lòng nhập link Shopee hợp lệ.', 'error');
-                    document.getElementById('homeResultBlock').classList.remove('show');
-                } else {
-                    homeHideStatus();
-                    document.getElementById('homeResultOutput').value = affLink;
-                    document.getElementById('homeVisitBtn').href = affLink;
-                    document.getElementById('homeResultBlock').classList.add('show');
-                }
-            } else {
-                homeShowStatus(data.error || 'Không tìm thấy link hợp lệ', 'error');
-                document.getElementById('homeResultBlock').classList.remove('show');
+            if (customData.success && customData.short_link) {
+                homeHideStatus();
+                document.getElementById('homeResultOutput').value = customData.short_link;
+                document.getElementById('homeVisitBtn').href = customData.short_link;
+                document.getElementById('homeResultBlock').classList.add('show');
+                apiSuccess = true;
             }
         } catch (e) {
-            homeShowStatus('Lỗi kết nối server', 'error');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Tạo link nhận mã ĐỘC QUYỀN FACEBOOK';
+            // API lỗi, tiếp tục fallback
         }
+
+        // Fallback: dùng phương án chuyển đổi link cũ
+        if (!apiSuccess) {
+            try {
+                const res = await fetch('/api/public-convert-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ urls: input })
+                });
+                const data = await res.json();
+
+                if (data.success && data.results && data.results.length > 0) {
+                    const affLink = data.results[0].affiliate;
+                    if (affLink === 'Không hỗ trợ') {
+                        homeShowStatus('Link không hỗ trợ. Vui lòng nhập link Shopee hợp lệ.', 'error');
+                        document.getElementById('homeResultBlock').classList.remove('show');
+                    } else {
+                        homeHideStatus();
+                        document.getElementById('homeResultOutput').value = affLink;
+                        document.getElementById('homeVisitBtn').href = affLink;
+                        document.getElementById('homeResultBlock').classList.add('show');
+                    }
+                } else {
+                    homeShowStatus(data.error || 'Không tìm thấy link hợp lệ', 'error');
+                    document.getElementById('homeResultBlock').classList.remove('show');
+                }
+            } catch (e) {
+                homeShowStatus('Lỗi kết nối server', 'error');
+            }
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Tạo link nhận mã ĐỘC QUYỀN FACEBOOK';
     }
 
     // Enter key to convert

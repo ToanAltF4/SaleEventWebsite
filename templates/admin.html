@@ -416,6 +416,54 @@
             margin-top: 2px;
         }
 
+        /* ===== COOKIE MODAL ===== */
+        .cookie-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+        }
+        .cookie-modal-overlay.active { display: flex; }
+
+        .cookie-modal {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 24px;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+
+        .cookie-modal h3 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 20px;
+            font-weight: 700;
+            font-style: italic;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .cookie-modal p {
+            font-size: 12px;
+            color: var(--text-sec);
+            margin-bottom: 14px;
+        }
+
+        .cookie-modal textarea {
+            min-height: 100px;
+            font-size: 13px;
+        }
+
+        .cookie-modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .cookie-modal-actions .btn { flex: 1; }
+
         /* ===== OVERLAY ===== */
         .overlay {
             display: none;
@@ -468,6 +516,7 @@
             <a class="nav-item {{ 'active' if page == 'click-report' }}" href="/admin/click-report">Báo Cáo Click</a>
         </nav>
         <div class="sidebar-bottom">
+            <a href="javascript:void(0)" class="sidebar-home" onclick="openCookieModal()" style="color:var(--primary);">Cập nhật Cookie</a>
             <a href="/" class="sidebar-home">Trang chủ</a>
             <div class="sidebar-footer">
                 <span class="sidebar-user">{{ user }}</span>
@@ -663,6 +712,20 @@
         </div>
     </main>
 
+    <!-- COOKIE MODAL -->
+    <div class="cookie-modal-overlay" id="cookieModalOverlay" onclick="if(event.target===this)closeCookieModal()">
+        <div class="cookie-modal">
+            <h3>Cập nhật Cookie Shopee</h3>
+            <p>Dán cookie từ affiliate.shopee.vn vào đây. Cookie dùng để tạo shortlink cho người dùng trang chủ.</p>
+            <textarea id="cookieModalInput" placeholder="Dán cookie vào đây..."></textarea>
+            <div id="cookieModalStatus" class="status"></div>
+            <div class="cookie-modal-actions">
+                <button class="btn btn-primary" onclick="saveCookieModal()">Lưu Cookie</button>
+                <button class="btn btn-outline" onclick="closeCookieModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const historyData = {{ (history or []) | tojson }};
 
@@ -820,6 +883,48 @@
                 } else {
                     window.location.href = '/admin/ai-content';
                 }
+            }
+        }
+
+        // ===== COOKIE MODAL =====
+        async function openCookieModal() {
+            document.getElementById('cookieModalOverlay').classList.add('active');
+            // Load cookie hiện tại
+            try {
+                const res = await fetch('/api/get-cookie');
+                const data = await res.json();
+                if (data.cookie) {
+                    document.getElementById('cookieModalInput').value = data.cookie;
+                }
+            } catch (e) {}
+        }
+
+        function closeCookieModal() {
+            document.getElementById('cookieModalOverlay').classList.remove('active');
+            hideStatus('cookieModalStatus');
+        }
+
+        async function saveCookieModal() {
+            const cookie = document.getElementById('cookieModalInput').value.trim();
+            if (!cookie) {
+                showStatus('cookieModalStatus', 'Vui lòng nhập cookie', 'error');
+                return;
+            }
+            try {
+                const res = await fetch('/api/save-cookie', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cookie: cookie })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showStatus('cookieModalStatus', 'Đã lưu cookie thành công!', 'success');
+                    setTimeout(() => closeCookieModal(), 1500);
+                } else {
+                    showStatus('cookieModalStatus', data.error || 'Lỗi lưu cookie', 'error');
+                }
+            } catch (e) {
+                showStatus('cookieModalStatus', 'Lỗi kết nối server', 'error');
             }
         }
 
