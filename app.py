@@ -353,13 +353,13 @@ def public_convert_link():
         if found:
             for url in found:
                 aff_url, _ = process_single_url(url, affiliate_id)
-                display_url = create_short_url(aff_url) if aff_url else "Không hỗ trợ"
+                display_url = aff_url if aff_url else "Không hỗ trợ"
                 results.append({"original": url, "affiliate": display_url})
         elif line.startswith(("http", "s.shopee", "shopee")):
             if not line.startswith("http"):
                 line = "https://" + line
             aff_url, _ = process_single_url(line, affiliate_id)
-            display_url = create_short_url(aff_url) if aff_url else "Không hỗ trợ"
+            display_url = aff_url if aff_url else "Không hỗ trợ"
             results.append({"original": line, "affiliate": display_url})
 
     if not results:
