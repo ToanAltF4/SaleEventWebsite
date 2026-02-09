@@ -14,7 +14,7 @@ from database import (
     init_db, get_setting, set_setting, add_history, get_history,
     verify_user, cleanup_old_history,
     create_short_link, get_short_link, find_short_link_by_target,
-    increment_click,
+    increment_click, get_admin_short_links, update_short_link_created_by,
 )
 
 load_dotenv()
@@ -215,12 +215,16 @@ def generate_short_code(length=8):
             return code
 
 
-def create_short_url(target_url):
+def create_short_url(target_url, created_by=None):
     existing = find_short_link_by_target(target_url)
     if existing:
+        # Nếu admin convert link mà trước đó public user đã tạo (created_by=NULL),
+        # cập nhật created_by để link xuất hiện trong báo cáo click của admin
+        if created_by and not existing.get("created_by"):
+            update_short_link_created_by(existing["short_code"], created_by)
         return f"https://{SHORT_DOMAIN}/s/{existing['short_code']}"
     code = generate_short_code()
-    create_short_link(code, target_url)
+    create_short_link(code, target_url, created_by=created_by)
     return f"https://{SHORT_DOMAIN}/s/{code}"
 
 
@@ -277,6 +281,30 @@ def admin_ai_content():
     affiliate_id = get_setting("affiliate_id", "")
     history = get_history(20)
     return render_template("admin.html", page="ai-content", affiliate_id=affiliate_id, history=history, user=session.get("user"))
+
+
+@app.route("/admin/click-report")
+@login_required
+def admin_click_report():
+    affiliate_id = get_setting("affiliate_id", "")
+    search = request.args.get("q", "")
+    date_from = request.args.get("from", "")
+    date_to = request.args.get("to", "")
+    links = get_admin_short_links(search=search, date_from=date_from, date_to=date_to)
+    total_clicks = sum(l["click_count"] for l in links)
+    return render_template(
+        "admin.html",
+        page="click-report",
+        affiliate_id=affiliate_id,
+        user=session.get("user"),
+        report_links=links,
+        total_clicks=total_clicks,
+        total_links=len(links),
+        search=search,
+        date_from=date_from,
+        date_to=date_to,
+        short_domain=SHORT_DOMAIN,
+    )
 
 
 @app.route("/s/<short_code>")
@@ -352,6 +380,7 @@ def convert_link():
     if not affiliate_id:
         return jsonify({"error": "Vui lòng cài đặt Affiliate ID trước"}), 400
 
+    user = session.get("user")
     lines = raw_urls.splitlines()
     results = []
     for line in lines:
@@ -362,13 +391,13 @@ def convert_link():
         if found:
             for url in found:
                 aff_url, _ = process_single_url(url, affiliate_id)
-                display_url = create_short_url(aff_url) if aff_url else "Không hỗ trợ"
+                display_url = create_short_url(aff_url, created_by=user) if aff_url else "Không hỗ trợ"
                 results.append({"original": url, "affiliate": display_url})
         elif line.startswith(("http", "s.shopee", "shopee")):
             if not line.startswith("http"):
                 line = "https://" + line
             aff_url, _ = process_single_url(line, affiliate_id)
-            display_url = create_short_url(aff_url) if aff_url else "Không hỗ trợ"
+            display_url = create_short_url(aff_url, created_by=user) if aff_url else "Không hỗ trợ"
             results.append({"original": line, "affiliate": display_url})
 
     if not results:
@@ -420,9 +449,10 @@ def convert():
         return jsonify({"error": f"Lỗi OpenAI: {str(e)}"}), 500
 
     # Thay thế tất cả link affiliate dài trong converted bằng short URL
+    user = session.get("user")
     short_mapping = {}
     for orig, aff in link_mapping.items():
-        short_url = create_short_url(aff)
+        short_url = create_short_url(aff, created_by=user)
         short_mapping[orig] = short_url
         converted = converted.replace(aff, short_url)
 

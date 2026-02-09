@@ -41,9 +41,15 @@ def init_db():
             short_code TEXT UNIQUE NOT NULL,
             target_url TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            click_count INTEGER DEFAULT 0
+            click_count INTEGER DEFAULT 0,
+            created_by TEXT DEFAULT NULL
         )
     """)
+    # Migration: thêm cột created_by nếu DB cũ chưa có
+    try:
+        conn.execute("ALTER TABLE short_links ADD COLUMN created_by TEXT DEFAULT NULL")
+    except sqlite3.OperationalError:
+        pass  # cột đã tồn tại
     conn.commit()
 
     # Create default admin user if not exists
@@ -120,11 +126,11 @@ def get_history(limit=20):
 #  SHORT LINKS
 # ============================================================
 
-def create_short_link(short_code, target_url):
+def create_short_link(short_code, target_url, created_by=None):
     conn = get_db()
     conn.execute(
-        "INSERT INTO short_links (short_code, target_url) VALUES (?, ?)",
-        (short_code, target_url),
+        "INSERT INTO short_links (short_code, target_url, created_by) VALUES (?, ?, ?)",
+        (short_code, target_url, created_by),
     )
     conn.commit()
     conn.close()
@@ -146,6 +152,16 @@ def find_short_link_by_target(target_url):
     ).fetchone()
     conn.close()
     return dict(row) if row else None
+
+
+def update_short_link_created_by(short_code, created_by):
+    conn = get_db()
+    conn.execute(
+        "UPDATE short_links SET created_by = ? WHERE short_code = ?",
+        (created_by, short_code),
+    )
+    conn.commit()
+    conn.close()
 
 
 def increment_click(short_code):
@@ -172,3 +188,22 @@ def delete_short_link(link_id):
     conn.execute("DELETE FROM short_links WHERE id = ?", (link_id,))
     conn.commit()
     conn.close()
+
+
+def get_admin_short_links(search="", date_from="", date_to=""):
+    conn = get_db()
+    query = "SELECT * FROM short_links WHERE created_by IS NOT NULL"
+    params = []
+    if search:
+        query += " AND (short_code LIKE ? OR target_url LIKE ?)"
+        params.extend([f"%{search}%", f"%{search}%"])
+    if date_from:
+        query += " AND date(created_at) >= ?"
+        params.append(date_from)
+    if date_to:
+        query += " AND date(created_at) <= ?"
+        params.append(date_to)
+    query += " ORDER BY created_at DESC"
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
