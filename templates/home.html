@@ -65,7 +65,6 @@
         font-style: italic;
         color: var(--primary);
         text-align: center;
-        white-space: nowrap;
     }
 
     .converter-block {
@@ -204,11 +203,11 @@
 
     .promo-instruction {
         width: 100%;
-        text-align: center;
-        font-size: 13px;
+        text-align: left;
+        font-size: 15px;
         font-weight: 700;
         color: var(--primary);
-        line-height: 1.6;
+        line-height: 2;
         margin-top: 6px;
     }
 
@@ -247,11 +246,13 @@
         .hero h1 { font-size: 28px; }
         .hero p { font-size: 14px; }
 
-        .converter-section { padding: 24px 14px 20px; }
+        .converter-section { padding: 20px 14px 16px; }
         .converter-wrap { max-width: 100%; }
-        .converter-title { font-size: 22px; }
-        .converter-block, .result-block { padding: 14px; }
-        .convert-btn { padding: 13px; font-size: 14px; }
+        .converter-title { font-size: 20px; }
+        .converter-block, .result-block { padding: 12px; }
+        .convert-btn { padding: 12px; font-size: 13px; }
+        .fb-post-btn { padding: 12px; font-size: 13px; }
+        .promo-instruction { font-size: 14px; }
     }
 {% endblock %}
 
@@ -283,11 +284,14 @@
                     <input type="text" id="homeResultOutput" class="result-input" readonly placeholder="Link sẽ hiển thị ở đây...">
                     <button class="copy-btn-home" onclick="homeCopy()">Copy</button>
                 </div>
-                <a href="#" class="visit-btn" id="homeVisitBtn" target="_blank">🔗 Truy cập link</a>
+                <a href="#" class="visit-btn" id="homeVisitBtn" target="_blank">Truy cập nhanh</a>
             </div>
 
             <!-- Promo section -->
-            <div class="promo-instruction">Dán link sản phẩm vào bài viết bên dưới và click vào link trong cmt để có mã độc quyền Facebook</div>
+            <div class="promo-instruction">
+                <div style="display:flex;gap:8px;"><span>1️⃣</span><span>Copy link & paste vào bài viết bên dưới</span></div>
+                <div style="display:flex;gap:8px;"><span>2️⃣</span><span>Click vào link sang Shopee mã sẽ tự động lưu</span></div>
+            </div>
             <a href="https://www.facebook.com/share/p/1C4do57ne2/" target="_blank" class="fb-post-btn">Truy cập bài viết</a>
             <img src="/static/promo-20.jpg" alt="Mã giảm 20%" class="promo-img">
         </div>
@@ -322,7 +326,7 @@
         document.execCommand('copy');
         const btn = el.parentElement.querySelector('.copy-btn-home');
         const orig = btn.innerHTML;
-        btn.innerHTML = '✅ Đã copy!';
+        btn.innerHTML = 'Đã copy!';
         setTimeout(() => btn.innerHTML = orig, 2000);
     }
 
@@ -366,7 +370,7 @@
             homeShowStatus('Lỗi kết nối server', 'error');
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Tạo link nhận mã 20% Facebook';
+            btn.textContent = 'Tạo link nhận mã ĐỘC QUYỀN FACEBOOK';
         }
     }
 

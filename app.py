@@ -6,6 +6,8 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from functools import wraps
 from dotenv import load_dotenv
 from openai import OpenAI
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from database import (
     init_db, get_setting, set_setting, add_history, get_history,
     verify_user, cleanup_old_history,
@@ -16,6 +18,17 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "kimngan-sale-secret-2026")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Rate limiter — dùng IP từ header X-Forwarded-For (cho tunnel/proxy)
+def get_real_ip():
+    return request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
+
+limiter = Limiter(
+    key_func=get_real_ip,
+    app=app,
+    storage_uri="memory://",
+    default_limits=[],
+)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROMPT_FILE = os.path.join(SCRIPT_DIR, "verify_prompt.txt")
@@ -254,6 +267,7 @@ def save_affiliate():
 
 
 @app.route("/api/public-convert-link", methods=["POST"])
+@limiter.limit("50 per hour", exempt_when=lambda: "user" in session)
 def public_convert_link():
     data = request.json
     raw_urls = data.get("urls", "").strip()
@@ -381,6 +395,11 @@ def convert():
 def history_api():
     history = get_history(20)
     return jsonify(history)
+
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify({"error": "Bạn đã tạo quá nhiều link. Vui lòng thử lại sau 1 giờ."}), 429
 
 
 if __name__ == "__main__":
