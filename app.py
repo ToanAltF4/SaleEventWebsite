@@ -8,9 +8,13 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import string
+import random
 from database import (
     init_db, get_setting, set_setting, add_history, get_history,
     verify_user, cleanup_old_history,
+    create_short_link, get_short_link, find_short_link_by_target,
+    increment_click,
 )
 
 load_dotenv()
@@ -197,6 +201,30 @@ def load_verify_prompt():
 
 
 # ============================================================
+#  SHORT URL
+# ============================================================
+
+SHORT_DOMAIN = "kimngan.site"
+
+
+def generate_short_code(length=8):
+    chars = string.ascii_letters + string.digits
+    while True:
+        code = "".join(random.choices(chars, k=length))
+        if not get_short_link(code):
+            return code
+
+
+def create_short_url(target_url):
+    existing = find_short_link_by_target(target_url)
+    if existing:
+        return f"https://{SHORT_DOMAIN}/s/{existing['short_code']}"
+    code = generate_short_code()
+    create_short_link(code, target_url)
+    return f"https://{SHORT_DOMAIN}/s/{code}"
+
+
+# ============================================================
 #  PAGES
 # ============================================================
 
@@ -251,6 +279,15 @@ def admin_ai_content():
     return render_template("admin.html", page="ai-content", affiliate_id=affiliate_id, history=history, user=session.get("user"))
 
 
+@app.route("/s/<short_code>")
+def short_redirect(short_code):
+    link = get_short_link(short_code)
+    if not link:
+        return "Link không tồn tại", 404
+    increment_click(short_code)
+    return redirect(link["target_url"])
+
+
 # ============================================================
 #  API
 # ============================================================
@@ -288,12 +325,14 @@ def public_convert_link():
         if found:
             for url in found:
                 aff_url, _ = process_single_url(url, affiliate_id)
-                results.append({"original": url, "affiliate": aff_url or "Không hỗ trợ"})
+                display_url = create_short_url(aff_url) if aff_url else "Không hỗ trợ"
+                results.append({"original": url, "affiliate": display_url})
         elif line.startswith(("http", "s.shopee", "shopee")):
             if not line.startswith("http"):
                 line = "https://" + line
             aff_url, _ = process_single_url(line, affiliate_id)
-            results.append({"original": line, "affiliate": aff_url or "Không hỗ trợ"})
+            display_url = create_short_url(aff_url) if aff_url else "Không hỗ trợ"
+            results.append({"original": line, "affiliate": display_url})
 
     if not results:
         return jsonify({"error": "Không tìm thấy link hợp lệ"}), 400
@@ -323,12 +362,14 @@ def convert_link():
         if found:
             for url in found:
                 aff_url, _ = process_single_url(url, affiliate_id)
-                results.append({"original": url, "affiliate": aff_url or "Không hỗ trợ"})
+                display_url = create_short_url(aff_url) if aff_url else "Không hỗ trợ"
+                results.append({"original": url, "affiliate": display_url})
         elif line.startswith(("http", "s.shopee", "shopee")):
             if not line.startswith("http"):
                 line = "https://" + line
             aff_url, _ = process_single_url(line, affiliate_id)
-            results.append({"original": line, "affiliate": aff_url or "Không hỗ trợ"})
+            display_url = create_short_url(aff_url) if aff_url else "Không hỗ trợ"
+            results.append({"original": line, "affiliate": display_url})
 
     if not results:
         return jsonify({"error": "Không tìm thấy link hợp lệ"}), 400
@@ -378,6 +419,13 @@ def convert():
     except Exception as e:
         return jsonify({"error": f"Lỗi OpenAI: {str(e)}"}), 500
 
+    # Thay thế tất cả link affiliate dài trong converted bằng short URL
+    short_mapping = {}
+    for orig, aff in link_mapping.items():
+        short_url = create_short_url(aff)
+        short_mapping[orig] = short_url
+        converted = converted.replace(aff, short_url)
+
     add_history(message, converted)
 
     return jsonify({
@@ -386,7 +434,7 @@ def convert():
         "converted": converted,
         "links_found": len(urls),
         "links_converted": len(link_mapping),
-        "mapping": link_mapping,
+        "mapping": short_mapping,
     })
 
 

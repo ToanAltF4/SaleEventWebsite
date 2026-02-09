@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Săn Sale Cùng Kim Ngân{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💖</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -263,7 +264,7 @@
         <div class="topnav-right">
             {% if user %}
                 <span class="topnav-user">{{ user }}</span>
-                <a href="/logout" class="topnav-link">Đăng xuất</a>
+                <a href="/admin" class="topnav-link">Dashboard</a>
             {% else %}
                 <a href="/login" class="topnav-link">Đăng nhập</a>
             {% endif %}
