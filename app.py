@@ -14,7 +14,7 @@ import string
 import random
 from database import (
     init_db, get_setting, set_setting, add_history, get_history,
-    verify_user, cleanup_old_history,
+    verify_user, cleanup_old_history, cleanup_old_short_links,
     create_short_link, get_short_link, find_short_link_by_target,
     increment_click, get_admin_short_links, update_short_link_created_by,
 )
@@ -86,6 +86,8 @@ def extract_shop_item_id(url):
 
 def is_short_url(url):
     parsed = urlparse(url)
+    if "vn.shp.ee" in parsed.netloc:
+        return True
     return "s.shopee.vn" in parsed.netloc and "/an_redir" not in url
 
 
@@ -599,4 +601,5 @@ def ratelimit_handler(e):
 if __name__ == "__main__":
     init_db()
     cleanup_old_history(14)
+    cleanup_old_short_links(30)
     app.run(debug=True, port=5000)

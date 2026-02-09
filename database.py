@@ -183,6 +183,16 @@ def get_all_short_links(limit=100):
     return [dict(r) for r in rows]
 
 
+def cleanup_old_short_links(days=30):
+    conn = get_db()
+    conn.execute(
+        "DELETE FROM short_links WHERE created_at < datetime('now', ?)",
+        (f"-{days} days",),
+    )
+    conn.commit()
+    conn.close()
+
+
 def delete_short_link(link_id):
     conn = get_db()
     conn.execute("DELETE FROM short_links WHERE id = ?", (link_id,))
