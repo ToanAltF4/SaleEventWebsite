@@ -241,6 +241,167 @@
         object-fit: cover;
     }
 
+    /* ===== SPLASH SCREEN ===== */
+    .splash {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 9999;
+        background: linear-gradient(160deg, #FFF8FA 0%, #FFE8EE 40%, #FFF0F5 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        transition: opacity 0.7s ease, transform 0.7s ease;
+        overflow: hidden;
+    }
+
+    .splash.hide {
+        opacity: 0;
+        transform: scale(1.05);
+        pointer-events: none;
+    }
+
+    /* Firework particles */
+    .splash-fw {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .splash-fw.burst-1 { animation: fwBurst1 1.8s ease-out forwards; }
+    .splash-fw.burst-2 { animation: fwBurst2 2s 0.4s ease-out forwards; }
+    .splash-fw.burst-3 { animation: fwBurst3 1.6s 0.8s ease-out forwards; }
+
+    @keyframes fwBurst1 {
+        0% { opacity: 0; transform: translate(0,0) scale(0); }
+        15% { opacity: 1; transform: translate(0,0) scale(1.5); }
+        100% { opacity: 0; transform: var(--fw-dir) scale(0); }
+    }
+    @keyframes fwBurst2 {
+        0% { opacity: 0; transform: translate(0,0) scale(0); }
+        15% { opacity: 1; transform: translate(0,0) scale(1.5); }
+        100% { opacity: 0; transform: var(--fw-dir) scale(0); }
+    }
+    @keyframes fwBurst3 {
+        0% { opacity: 0; transform: translate(0,0) scale(0); }
+        15% { opacity: 1; transform: translate(0,0) scale(1.5); }
+        100% { opacity: 0; transform: var(--fw-dir) scale(0); }
+    }
+
+    /* Greeting text */
+    .splash-greeting {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 28px;
+        font-weight: 700;
+        font-style: italic;
+        color: var(--primary);
+        text-align: center;
+        opacity: 0;
+        animation: greetPop 0.6s 0.8s ease both;
+        z-index: 2;
+    }
+
+    @keyframes greetPop {
+        0% { opacity: 0; transform: scale(0.6); }
+        60% { transform: scale(1.08); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Lucky cat sitting */
+    .splash-cat {
+        position: absolute;
+        bottom: 10%;
+        right: 8%;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        opacity: 0;
+        animation: catAppear 0.6s 0.6s ease both;
+        pointer-events: none;
+    }
+
+    .splash-cat-body {
+        font-size: 60px;
+        line-height: 1;
+    }
+
+    /* Waving paw */
+    .splash-cat-paw {
+        position: absolute;
+        top: -8px;
+        right: -2px;
+        font-size: 26px;
+        transform-origin: bottom center;
+        animation: pawWave 0.5s 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes pawWave {
+        from { transform: rotate(-15deg); }
+        to { transform: rotate(25deg); }
+    }
+
+    @keyframes catAppear {
+        0% { opacity: 0; transform: translateY(30px) scale(0.7); }
+        60% { transform: translateY(-5px) scale(1.05); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Speech bubble */
+    .splash-bubble {
+        position: absolute;
+        bottom: 26%;
+        right: 18%;
+        background: #fff;
+        border-radius: 16px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--primary);
+        box-shadow: 0 2px 16px rgba(232,86,127,0.15);
+        opacity: 0;
+        z-index: 4;
+        white-space: nowrap;
+        animation: bubblePop 0.4s 1.2s ease both;
+        pointer-events: none;
+    }
+
+    .splash-bubble::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        right: 24px;
+        width: 12px;
+        height: 12px;
+        background: #fff;
+        transform: rotate(45deg);
+    }
+
+    @keyframes bubblePop {
+        0% { opacity: 0; transform: scale(0.5) translateY(10px); }
+        60% { transform: scale(1.06) translateY(-2px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Sparkle burst when cat is at center */
+    .splash-sparkle {
+        position: absolute;
+        font-size: 20px;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    @keyframes sparkle {
+        0% { opacity: 0; transform: translate(0,0) scale(0.3); }
+        40% { opacity: 1; }
+        100% { opacity: 0; transform: var(--sparkle-dir) scale(0.6); }
+    }
+
     @media (max-width: 768px) {
         .hero { padding: 40px 16px 28px; }
         .hero h1 { font-size: 28px; }
@@ -253,10 +414,30 @@
         .convert-btn { padding: 12px; font-size: 13px; }
         .fb-post-btn { padding: 12px; font-size: 13px; }
         .promo-instruction { font-size: 14px; }
+
+        .splash-greeting { font-size: 20px; }
     }
 {% endblock %}
 
 {% block content %}
+    {% if not user %}
+    <!-- SPLASH WELCOME -->
+    <div class="splash" id="splashScreen">
+        <!-- Fireworks container (generated by JS) -->
+        <div id="fwContainer"></div>
+
+        <!-- Greeting -->
+        <div class="splash-greeting">Săn Sale Cùng Kim Ngân</div>
+
+        <!-- Sparkles (activated by JS) -->
+        <div class="splash-sparkle" id="sp1" style="--sparkle-dir:translate(-30px,-40px)">✨</div>
+        <div class="splash-sparkle" id="sp2" style="--sparkle-dir:translate(30px,-35px)">💖</div>
+        <div class="splash-sparkle" id="sp3" style="--sparkle-dir:translate(-25px,30px)">🌸</div>
+        <div class="splash-sparkle" id="sp4" style="--sparkle-dir:translate(35px,25px)">💗</div>
+
+    </div>
+    {% endif %}
+
     <!-- CONVERTER FOR EVERYONE -->
     <div class="converter-section">
         <div class="converter-wrap">
@@ -403,5 +584,64 @@
     document.getElementById('homeUrlInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') homeConvert();
     });
+
+    // Splash screen
+    (function() {
+        const splash = document.getElementById('splashScreen');
+        if (!splash) return;
+        if (sessionStorage.getItem('splashShown')) {
+            splash.remove();
+            return;
+        }
+        sessionStorage.setItem('splashShown', '1');
+
+        // Generate fireworks
+        var container = document.getElementById('fwContainer');
+        var colors = ['#E8567F','#F78DA7','#FF6B9D','#FFB6C1','#FF85A2','#E91E63','#FF4081','#F50057','#FF69B4','#DB7093','#C71585','#FFD700','#FFA500','#FF6347'];
+        var bursts = [
+            { x: 20, y: 25, cls: 'burst-1', count: 14 },
+            { x: 75, y: 20, cls: 'burst-2', count: 14 },
+            { x: 50, y: 30, cls: 'burst-3', count: 16 },
+            { x: 30, y: 60, cls: 'burst-2', count: 12 },
+            { x: 80, y: 55, cls: 'burst-1', count: 12 },
+            { x: 15, y: 45, cls: 'burst-3', count: 10 },
+            { x: 65, y: 70, cls: 'burst-1', count: 10 },
+        ];
+        bursts.forEach(function(b) {
+            for (var i = 0; i < b.count; i++) {
+                var angle = (Math.PI * 2 / b.count) * i;
+                var dist = 60 + Math.random() * 80;
+                var dx = Math.cos(angle) * dist;
+                var dy = Math.sin(angle) * dist;
+                var dot = document.createElement('div');
+                dot.className = 'splash-fw ' + b.cls;
+                dot.style.left = b.x + '%';
+                dot.style.top = b.y + '%';
+                dot.style.width = (4 + Math.random() * 5) + 'px';
+                dot.style.height = dot.style.width;
+                dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+                dot.style.boxShadow = '0 0 6px ' + dot.style.background;
+                dot.style.setProperty('--fw-dir', 'translate(' + dx + 'px,' + dy + 'px)');
+                container.appendChild(dot);
+            }
+        });
+
+        // Sparkles burst around greeting text
+        setTimeout(function() {
+            ['sp1','sp2','sp3','sp4'].forEach(function(id, i) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                el.style.left = '50%';
+                el.style.top = '45%';
+                el.style.animation = 'sparkle 0.8s ' + (i * 0.12) + 's ease both';
+            });
+        }, 1400);
+
+        // Dismiss splash
+        setTimeout(function() {
+            splash.classList.add('hide');
+            setTimeout(function() { splash.remove(); }, 800);
+        }, 3000);
+    })();
 </script>
 {% endblock %}
