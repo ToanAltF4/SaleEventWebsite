@@ -1,6 +1,13 @@
 import sqlite3
 import os
+from datetime import datetime, timezone, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+
+VN_TZ = timezone(timedelta(hours=7))
+
+
+def vn_now():
+    return datetime.now(VN_TZ).strftime("%Y-%m-%d %H:%M:%S")
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app.db")
 
@@ -67,10 +74,8 @@ def init_db():
 
 def cleanup_old_history(days=14):
     conn = get_db()
-    conn.execute(
-        "DELETE FROM history WHERE created_at < datetime('now', ?)",
-        (f"-{days} days",),
-    )
+    cutoff = (datetime.now(VN_TZ) - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute("DELETE FROM history WHERE created_at < ?", (cutoff,))
     conn.commit()
     conn.close()
 
@@ -106,8 +111,8 @@ def set_setting(key, value):
 def add_history(original, converted):
     conn = get_db()
     conn.execute(
-        "INSERT INTO history (original_message, converted_message) VALUES (?, ?)",
-        (original, converted),
+        "INSERT INTO history (original_message, converted_message, created_at) VALUES (?, ?, ?)",
+        (original, converted, vn_now()),
     )
     conn.commit()
     conn.close()
@@ -129,8 +134,8 @@ def get_history(limit=20):
 def create_short_link(short_code, target_url, created_by=None):
     conn = get_db()
     conn.execute(
-        "INSERT INTO short_links (short_code, target_url, created_by) VALUES (?, ?, ?)",
-        (short_code, target_url, created_by),
+        "INSERT INTO short_links (short_code, target_url, created_by, created_at) VALUES (?, ?, ?, ?)",
+        (short_code, target_url, created_by, vn_now()),
     )
     conn.commit()
     conn.close()
@@ -185,10 +190,8 @@ def get_all_short_links(limit=100):
 
 def cleanup_old_short_links(days=30):
     conn = get_db()
-    conn.execute(
-        "DELETE FROM short_links WHERE created_at < datetime('now', ?)",
-        (f"-{days} days",),
-    )
+    cutoff = (datetime.now(VN_TZ) - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute("DELETE FROM short_links WHERE created_at < ?", (cutoff,))
     conn.commit()
     conn.close()
 
