@@ -2,6 +2,7 @@ import os
 import re
 import json as json_lib
 import requests
+from datetime import timedelta
 from curl_cffi import requests as cffi_requests
 from urllib.parse import urlparse, quote, parse_qs, urlencode, urlunparse, unquote
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
@@ -23,6 +24,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "kimngan-sale-secret-2026")
+app.permanent_session_lifetime = timedelta(days=30)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Rate limiter — dùng IP từ header X-Forwarded-For (cho tunnel/proxy)
@@ -255,6 +257,7 @@ def login_submit():
     password = data.get("password", "")
 
     if verify_user(username, password):
+        session.permanent = True
         session["user"] = username
         return redirect(url_for("admin_dashboard"))
     return render_template("login.html", error="Sai tài khoản hoặc mật khẩu")
