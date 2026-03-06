@@ -212,3 +212,6 @@ __marimo__/
 nul
 NUL
 .claude/
+app.db
+*.txt
+!requirements.txt
