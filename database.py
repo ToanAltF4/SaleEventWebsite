@@ -52,6 +52,26 @@ def init_db():
             created_by TEXT DEFAULT NULL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS multi_affids (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            affid TEXT NOT NULL,
+            name TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS multi_affid_links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            affid_id INTEGER NOT NULL,
+            short_code TEXT UNIQUE NOT NULL,
+            target_url TEXT NOT NULL,
+            original_url TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            click_count INTEGER DEFAULT 0,
+            FOREIGN KEY (affid_id) REFERENCES multi_affids(id)
+        )
+    """)
     # Migration: thêm cột created_by nếu DB cũ chưa có
     try:
         conn.execute("ALTER TABLE short_links ADD COLUMN created_by TEXT DEFAULT NULL")
@@ -199,6 +219,113 @@ def cleanup_old_short_links(days=30):
 def delete_short_link(link_id):
     conn = get_db()
     conn.execute("DELETE FROM short_links WHERE id = ?", (link_id,))
+    conn.commit()
+    conn.close()
+
+
+# ============================================================
+#  MULTI AFFILIATE
+# ============================================================
+
+def create_multi_affid(affid, name=""):
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO multi_affids (affid, name, created_at) VALUES (?, ?, ?)",
+        (affid, name, vn_now()),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_all_multi_affids():
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM multi_affids ORDER BY created_at DESC").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_multi_affid(affid_id):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM multi_affids WHERE id = ?", (affid_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def delete_multi_affid(affid_id):
+    conn = get_db()
+    conn.execute("DELETE FROM multi_affid_links WHERE affid_id = ?", (affid_id,))
+    conn.execute("DELETE FROM multi_affids WHERE id = ?", (affid_id,))
+    conn.commit()
+    conn.close()
+
+
+def create_multi_affid_link(affid_id, short_code, target_url, original_url):
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO multi_affid_links (affid_id, short_code, target_url, original_url, created_at, click_count) VALUES (?, ?, ?, ?, ?, 0)",
+        (affid_id, short_code, target_url, original_url, vn_now()),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_multi_affid_link(short_code):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT * FROM multi_affid_links WHERE short_code = ?", (short_code,)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def find_multi_affid_link_by_target(affid_id, target_url):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT * FROM multi_affid_links WHERE affid_id = ? AND target_url = ?",
+        (affid_id, target_url),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def increment_multi_affid_click(short_code):
+    conn = get_db()
+    conn.execute(
+        "UPDATE multi_affid_links SET click_count = click_count + 1 WHERE short_code = ?",
+        (short_code,),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_multi_affid_links(affid_id, page=1, per_page=10):
+    conn = get_db()
+    offset = (page - 1) * per_page
+    total = conn.execute(
+        "SELECT COUNT(*) as cnt FROM multi_affid_links WHERE affid_id = ?", (affid_id,)
+    ).fetchone()["cnt"]
+    rows = conn.execute(
+        "SELECT * FROM multi_affid_links WHERE affid_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+        (affid_id, per_page, offset),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows], total
+
+
+def get_multi_affid_total_clicks(affid_id):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT COALESCE(SUM(click_count), 0) as total FROM multi_affid_links WHERE affid_id = ?",
+        (affid_id,),
+    ).fetchone()
+    conn.close()
+    return row["total"]
+
+
+def cleanup_old_multi_affid_links(days=30):
+    conn = get_db()
+    cutoff = (datetime.now(VN_TZ) - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute("DELETE FROM multi_affid_links WHERE created_at < ?", (cutoff,))
     conn.commit()
     conn.close()
 

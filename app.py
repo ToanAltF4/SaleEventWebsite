@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import math
 import string
 import random
 from database import (
@@ -18,6 +19,11 @@ from database import (
     verify_user, cleanup_old_history, cleanup_old_short_links,
     create_short_link, get_short_link, find_short_link_by_target,
     increment_click, get_admin_short_links, update_short_link_created_by,
+    create_multi_affid, get_all_multi_affids, get_multi_affid,
+    delete_multi_affid, create_multi_affid_link, get_multi_affid_link,
+    find_multi_affid_link_by_target, increment_multi_affid_click,
+    get_multi_affid_links, get_multi_affid_total_clicks,
+    cleanup_old_multi_affid_links,
 )
 
 load_dotenv()
@@ -314,12 +320,55 @@ def admin_click_report():
     )
 
 
+@app.route("/admin/multi-affid")
+@login_required
+def admin_multi_affid():
+    affids = get_all_multi_affids()
+    # Lấy thông tin links và clicks cho mỗi affid
+    affid_data = []
+    page_num = int(request.args.get("page", 1))
+    active_affid = request.args.get("active", "")
+    for a in affids:
+        if active_affid and str(a["id"]) == active_affid:
+            links, total = get_multi_affid_links(a["id"], page=page_num, per_page=10)
+        else:
+            links, total = get_multi_affid_links(a["id"], page=1, per_page=10)
+        total_clicks = get_multi_affid_total_clicks(a["id"])
+        current_page = page_num if (active_affid and str(a["id"]) == active_affid) else 1
+        total_pages = math.ceil(total / 10) if total > 0 else 1
+        affid_data.append({
+            **a,
+            "links": links,
+            "total_links": total,
+            "total_clicks": total_clicks,
+            "current_page": current_page,
+            "total_pages": total_pages,
+        })
+    return render_template(
+        "admin.html",
+        page="multi-affid",
+        user=session.get("user"),
+        affid_data=affid_data,
+        short_domain=SHORT_DOMAIN,
+        active_affid=active_affid,
+    )
+
+
 @app.route("/s/<short_code>")
 def short_redirect(short_code):
     link = get_short_link(short_code)
     if not link:
         return "Link không tồn tại", 404
     increment_click(short_code)
+    return redirect(link["target_url"])
+
+
+@app.route("/m/<short_code>")
+def multi_affid_redirect(short_code):
+    link = get_multi_affid_link(short_code)
+    if not link:
+        return "Link không tồn tại", 404
+    increment_multi_affid_click(short_code)
     return redirect(link["target_url"])
 
 
@@ -596,6 +645,82 @@ def history_api():
     return jsonify(history)
 
 
+# ============================================================
+#  MULTI AFFILIATE API
+# ============================================================
+
+@app.route("/api/multi-affid/add", methods=["POST"])
+@login_required
+def multi_affid_add():
+    data = request.json
+    affid = data.get("affid", "").strip()
+    name = data.get("name", "").strip()
+    if not affid:
+        return jsonify({"error": "Affiliate ID không được để trống"}), 400
+    create_multi_affid(affid, name)
+    return jsonify({"success": True})
+
+
+@app.route("/api/multi-affid/delete/<int:affid_id>", methods=["DELETE"])
+@login_required
+def multi_affid_delete(affid_id):
+    affid = get_multi_affid(affid_id)
+    if not affid:
+        return jsonify({"error": "Không tìm thấy Affiliate ID"}), 404
+    delete_multi_affid(affid_id)
+    return jsonify({"success": True})
+
+
+@app.route("/api/multi-affid/convert", methods=["POST"])
+@login_required
+def multi_affid_convert():
+    data = request.json
+    affid_id = data.get("affid_id")
+    raw_url = data.get("url", "").strip()
+    if not affid_id or not raw_url:
+        return jsonify({"error": "Thiếu thông tin"}), 400
+
+    affid_record = get_multi_affid(affid_id)
+    if not affid_record:
+        return jsonify({"error": "Không tìm thấy Affiliate ID"}), 404
+
+    affiliate_id = affid_record["affid"]
+
+    # Xử lý URL
+    aff_url, original = process_single_url(raw_url, affiliate_id)
+    if not aff_url:
+        return jsonify({"error": "Không thể chuyển đổi link này"}), 400
+
+    # Kiểm tra link đã tồn tại chưa
+    existing = find_multi_affid_link_by_target(affid_id, aff_url)
+    if existing:
+        short_url = f"https://{SHORT_DOMAIN}/m/{existing['short_code']}"
+        return jsonify({"success": True, "short_url": short_url, "existing": True})
+
+    # Tạo short code mới
+    code = generate_short_code()
+    create_multi_affid_link(affid_id, code, aff_url, original)
+    short_url = f"https://{SHORT_DOMAIN}/m/{code}"
+    return jsonify({"success": True, "short_url": short_url})
+
+
+@app.route("/api/multi-affid/links/<int:affid_id>")
+@login_required
+def multi_affid_links_api(affid_id):
+    page = int(request.args.get("page", 1))
+    per_page = 10
+    links, total = get_multi_affid_links(affid_id, page=page, per_page=per_page)
+    total_pages = math.ceil(total / per_page) if total > 0 else 1
+    total_clicks = get_multi_affid_total_clicks(affid_id)
+    return jsonify({
+        "links": links,
+        "total": total,
+        "total_clicks": total_clicks,
+        "page": page,
+        "total_pages": total_pages,
+    })
+
+
 @app.errorhandler(429)
 def ratelimit_handler(e):
     return jsonify({"error": "Bạn đã tạo quá nhiều link. Vui lòng thử lại sau 1 giờ."}), 429
@@ -605,4 +730,5 @@ if __name__ == "__main__":
     init_db()
     cleanup_old_history(14)
     cleanup_old_short_links(30)
+    cleanup_old_multi_affid_links(30)
     app.run(debug=True, port=5000)

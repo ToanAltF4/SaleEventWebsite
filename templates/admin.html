@@ -192,6 +192,10 @@
             width: 100%;
         }
 
+        .main-body.wide {
+            max-width: 960px;
+        }
+
         .main-footer {
             padding: 18px 24px;
             text-align: center;
@@ -514,6 +518,7 @@
             <a class="nav-item {{ 'active' if page == 'convert-link' }}" href="/admin/convert-link">Chuyển đổi Link</a>
             <a class="nav-item {{ 'active' if page == 'ai-content' }}" href="/admin/ai-content">AI Tạo nội dung</a>
             <a class="nav-item {{ 'active' if page == 'click-report' }}" href="/admin/click-report">Báo Cáo Click</a>
+            <a class="nav-item {{ 'active' if page == 'multi-affid' }}" href="/admin/multi-affid">Multi Affiliate</a>
         </nav>
         <div class="sidebar-bottom">
             <a href="javascript:void(0)" class="sidebar-home" onclick="openCookieModal()" style="color:var(--primary);">Cập nhật Cookie</a>
@@ -554,8 +559,9 @@
             <p>Chuyển đổi link Affiliate nhanh chóng</p>
         </div>
 
-        <div class="main-body">
+        <div class="main-body {% if page == 'multi-affid' %}wide{% endif %}">
 
+            {% if page != 'multi-affid' %}
             <!-- Affiliate ID -->
             <div class="card">
                 <div class="card-title">Affiliate ID</div>
@@ -566,6 +572,7 @@
                 </div>
                 <div id="affStatus" class="status"></div>
             </div>
+            {% endif %}
 
             {% if page == 'convert-link' %}
             <!-- CONVERT LINK -->
@@ -679,6 +686,121 @@
                     </table>
                 </div>
             </div>
+
+            {% elif page == 'multi-affid' %}
+            <!-- MULTI AFFILIATE -->
+            <div class="page-title">
+                <h3>Multi Affiliate</h3>
+                <p>Quản lý nhiều Affiliate ID &mdash; Tạo link &amp; theo dõi click riêng biệt</p>
+            </div>
+
+            <!-- Thêm Affiliate ID mới -->
+            <div class="card">
+                <div class="card-title">Thêm Affiliate ID mới</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <input type="text" id="newAffidInput" placeholder="Nhập Affiliate ID" style="flex:1;min-width:160px;">
+                    <input type="text" id="newAffidName" placeholder="Tên gợi nhớ (tuỳ chọn)" style="flex:1;min-width:140px;">
+                    <button class="btn btn-primary" onclick="addMultiAffid()">Thêm</button>
+                </div>
+                <div id="addAffidStatus" class="status"></div>
+            </div>
+
+            {% if affid_data %}
+            {% for affid in affid_data %}
+            <!-- Block Affiliate ID -->
+            <div class="card" id="affid-block-{{ affid.id }}" style="border-left:3px solid var(--primary);">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:15px;font-weight:700;color:var(--text);">
+                            {{ affid.name or 'Affiliate' }} <span style="font-size:12px;color:var(--text-muted);font-weight:500;">#{{ affid.affid }}</span>
+                        </div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Tạo lúc: {{ affid.created_at }}</div>
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <span style="background:var(--primary);color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">{{ affid.total_links }} link</span>
+                        <span style="background:#E8F5E9;color:#2E7D32;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">{{ affid.total_clicks }} click</span>
+                        <button onclick="deleteMultiAffid({{ affid.id }})" style="background:none;border:1px solid #ffcdd2;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:700;color:#C62828;font-family:'Quicksand',sans-serif;">Xoá</button>
+                    </div>
+                </div>
+
+                <!-- Convert link -->
+                <div style="display:flex;gap:8px;margin-bottom:10px;">
+                    <input type="text" id="urlInput-{{ affid.id }}" placeholder="Dán link Shopee vào đây..." style="flex:1;">
+                    <button class="btn btn-dark" onclick="convertMultiAffid({{ affid.id }})">Tạo link</button>
+                </div>
+                <div id="convertStatus-{{ affid.id }}" class="status"></div>
+                <div id="convertResult-{{ affid.id }}" style="display:none;margin-top:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;background:var(--primary-bg);padding:10px 14px;border-radius:8px;">
+                        <input type="text" id="convertOutput-{{ affid.id }}" readonly style="flex:1;border:none;background:transparent;font-size:13px;font-weight:600;color:var(--primary);">
+                        <button onclick="copyMultiResult({{ affid.id }})" style="background:var(--primary);color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:700;font-family:'Quicksand',sans-serif;white-space:nowrap;">Copy</button>
+                    </div>
+                </div>
+
+                <!-- Danh sách link đã tạo -->
+                {% if affid.links %}
+                <div style="margin-top:14px;">
+                    <div style="font-size:12px;font-weight:700;color:var(--text-sec);margin-bottom:8px;text-transform:uppercase;">Link đã tạo</div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                            <thead>
+                                <tr style="border-bottom:2px solid var(--border);text-align:left;">
+                                    <th style="padding:8px 6px;font-weight:700;color:var(--text-sec);">Link rút gọn</th>
+                                    <th style="padding:8px 6px;font-weight:700;color:var(--text-sec);">Link gốc</th>
+                                    <th style="padding:8px 6px;font-weight:700;color:var(--text-sec);">Ngày tạo</th>
+                                    <th style="padding:8px 6px;font-weight:700;color:var(--text-sec);text-align:center;">Click</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for link in affid.links %}
+                                <tr style="border-bottom:1px solid var(--primary-bg);">
+                                    <td style="padding:8px 6px;">
+                                        <div style="display:flex;align-items:center;gap:4px;">
+                                            <a href="/m/{{ link.short_code }}" target="_blank" style="color:var(--primary);font-weight:700;text-decoration:none;font-size:12px;">
+                                                {{ short_domain }}/m/{{ link.short_code }}
+                                            </a>
+                                            <button onclick="navigator.clipboard.writeText('https://{{ short_domain }}/m/{{ link.short_code }}');this.textContent='OK!';setTimeout(()=>this.textContent='Copy',1500)" style="background:none;border:1px solid var(--border);border-radius:4px;padding:1px 6px;cursor:pointer;font-size:10px;font-family:'Quicksand',sans-serif;font-weight:600;color:var(--text-sec);">Copy</button>
+                                        </div>
+                                    </td>
+                                    <td style="padding:8px 6px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--text-sec);" title="{{ link.target_url }}">
+                                        {{ link.target_url[:70] }}{% if link.target_url|length > 70 %}...{% endif %}
+                                    </td>
+                                    <td style="padding:8px 6px;font-size:11px;color:var(--text-muted);white-space:nowrap;">{{ link.created_at }}</td>
+                                    <td style="padding:8px 6px;text-align:center;">
+                                        <span style="background:{% if link.click_count > 0 %}var(--primary){% else %}var(--border){% endif %};color:{% if link.click_count > 0 %}#fff{% else %}var(--text-sec){% endif %};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">
+                                            {{ link.click_count }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Phân trang -->
+                    {% if affid.total_pages > 1 %}
+                    <div style="display:flex;justify-content:center;gap:4px;margin-top:12px;flex-wrap:wrap;">
+                        {% for p in range(1, affid.total_pages + 1) %}
+                        <a href="/admin/multi-affid?active={{ affid.id }}&page={{ p }}"
+                           style="padding:5px 11px;border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;font-family:'Quicksand',sans-serif;
+                           {% if p == affid.current_page %}background:var(--primary);color:#fff;{% else %}background:var(--primary-bg);color:var(--text-sec);border:1px solid var(--border);{% endif %}">
+                            {{ p }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% elif affid.total_links == 0 %}
+                <div style="margin-top:12px;padding:16px;text-align:center;font-size:12px;color:var(--text-muted);font-weight:600;background:var(--primary-bg);border-radius:8px;">
+                    Chưa có link nào được tạo
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="card" style="text-align:center;padding:32px;">
+                <div style="font-size:14px;color:var(--text-muted);font-weight:600;">Chưa có Affiliate ID nào. Hãy thêm ở trên!</div>
+            </div>
+            {% endif %}
 
             {% elif page == 'ai-content' %}
             <!-- AI CONTENT -->
@@ -925,6 +1047,85 @@
                 }
             } catch (e) {
                 showStatus('cookieModalStatus', 'Lỗi kết nối server', 'error');
+            }
+        }
+
+        // ===== MULTI AFFILIATE =====
+        async function addMultiAffid() {
+            const affid = document.getElementById('newAffidInput')?.value.trim();
+            const name = document.getElementById('newAffidName')?.value.trim();
+            if (!affid) { showStatus('addAffidStatus', 'Vui lòng nhập Affiliate ID', 'error'); return; }
+            try {
+                const res = await fetch('/api/multi-affid/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ affid, name })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    showStatus('addAffidStatus', data.error, 'error');
+                }
+            } catch (e) {
+                showStatus('addAffidStatus', 'Lỗi kết nối', 'error');
+            }
+        }
+
+        async function deleteMultiAffid(id) {
+            if (!confirm('Xoá Affiliate ID này và tất cả link liên quan?')) return;
+            try {
+                const res = await fetch('/api/multi-affid/delete/' + id, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    const block = document.getElementById('affid-block-' + id);
+                    if (block) block.remove();
+                } else {
+                    alert(data.error || 'Lỗi xoá');
+                }
+            } catch (e) {
+                alert('Lỗi kết nối');
+            }
+        }
+
+        async function convertMultiAffid(affidId) {
+            const input = document.getElementById('urlInput-' + affidId);
+            const url = input?.value.trim();
+            if (!url) { showStatus('convertStatus-' + affidId, 'Vui lòng nhập link', 'error'); return; }
+
+            showStatus('convertStatus-' + affidId, 'Đang chuyển đổi...', 'loading');
+            document.getElementById('convertResult-' + affidId).style.display = 'none';
+
+            try {
+                const res = await fetch('/api/multi-affid/convert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ affid_id: affidId, url })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    hideStatus('convertStatus-' + affidId);
+                    document.getElementById('convertOutput-' + affidId).value = data.short_url;
+                    document.getElementById('convertResult-' + affidId).style.display = 'block';
+                    input.value = '';
+                    // Reload after 1s to update link list
+                    setTimeout(() => {
+                        window.location.href = '/admin/multi-affid?active=' + affidId;
+                    }, 1000);
+                } else {
+                    showStatus('convertStatus-' + affidId, data.error, 'error');
+                }
+            } catch (e) {
+                showStatus('convertStatus-' + affidId, 'Lỗi kết nối', 'error');
+            }
+        }
+
+        function copyMultiResult(affidId) {
+            const el = document.getElementById('convertOutput-' + affidId);
+            if (el) {
+                navigator.clipboard.writeText(el.value);
+                el.style.color = '#2E7D32';
+                setTimeout(() => el.style.color = 'var(--primary)', 1500);
             }
         }
 
