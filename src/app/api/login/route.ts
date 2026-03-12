@@ -6,12 +6,12 @@ export async function POST(req: NextRequest) {
   const { username, password } = await req.json();
 
   if (!username || !password) {
-    return NextResponse.json({ error: "Vui long nhap tai khoan va mat khau" }, { status: 400 });
+    return NextResponse.json({ error: "Vui lòng nhập tài khoản và mật khẩu" }, { status: 400 });
   }
 
   const valid = await verifyUser(username.trim(), password);
   if (!valid) {
-    return NextResponse.json({ error: "Sai tai khoan hoac mat khau" }, { status: 401 });
+    return NextResponse.json({ error: "Sai tài khoản hoặc mật khẩu" }, { status: 401 });
   }
 
   const session = await getSession();

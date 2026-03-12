@@ -19,12 +19,12 @@ export async function POST(req: NextRequest) {
 
   const { message } = await req.json();
   if (!message?.trim()) {
-    return NextResponse.json({ error: "Vui long nhap noi dung tin nhan" }, { status: 400 });
+    return NextResponse.json({ error: "Vui lòng nhập nội dung tin nhắn" }, { status: 400 });
   }
 
   const affiliateId = await getSetting("affiliate_id", "");
   if (!affiliateId) {
-    return NextResponse.json({ error: "Vui long cai dat Affiliate ID truoc" }, { status: 400 });
+    return NextResponse.json({ error: "Vui lòng cài đặt Affiliate ID trước" }, { status: 400 });
   }
 
   const urls = extractUrlsFromText(message);
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   const mappingText = Object.keys(linkMapping).length > 0
     ? Object.entries(linkMapping).map(([orig, aff]) => `- ${orig} -> ${aff}`).join("\n")
-    : "(Khong co link Shopee can chuyen doi. Giu nguyen tat ca link trong tin nhan.)";
+    : "(Không có link Shopee cần chuyển đổi. Giữ nguyên tất cả link trong tin nhắn.)";
 
   const promptTemplate = loadVerifyPrompt();
   const prompt = promptTemplate
@@ -73,6 +73,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: `Loi OpenAI: ${msg}` }, { status: 500 });
+    return NextResponse.json({ error: `Lỗi OpenAI: ${msg}` }, { status: 500 });
   }
 }

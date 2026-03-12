@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
     if (!checkRateLimit(ip)) {
       return NextResponse.json(
-        { error: "Ban da tao qua nhieu link. Vui long thu lai sau 1 gio." },
+        { error: "Bạn đã tạo quá nhiều link. Vui lòng thử lại sau 1 giờ." },
         { status: 429 }
       );
     }
@@ -18,12 +18,12 @@ export async function POST(req: NextRequest) {
 
   const { urls: rawUrls } = await req.json();
   if (!rawUrls?.trim()) {
-    return NextResponse.json({ error: "Vui long nhap it nhat 1 link" }, { status: 400 });
+    return NextResponse.json({ error: "Vui lòng nhập ít nhất 1 link" }, { status: 400 });
   }
 
   const affiliateId = await getSetting("affiliate_id", "");
   if (!affiliateId) {
-    return NextResponse.json({ error: "He thong chua duoc cau hinh. Vui long lien he admin." }, { status: 400 });
+    return NextResponse.json({ error: "Hệ thống chưa được cấu hình. Vui lòng liên hệ admin." }, { status: 400 });
   }
 
   const lines = rawUrls.split("\n");
@@ -37,18 +37,18 @@ export async function POST(req: NextRequest) {
     if (found.length > 0) {
       for (const url of found) {
         const [affUrl] = await processSingleUrl(url, affiliateId);
-        results.push({ original: url, affiliate: affUrl || "Khong ho tro" });
+        results.push({ original: url, affiliate: affUrl || "Không hỗ trợ" });
       }
     } else if (line.startsWith("http") || line.startsWith("s.shopee") || line.startsWith("shopee")) {
       let processUrl = line;
       if (!processUrl.startsWith("http")) processUrl = "https://" + processUrl;
       const [affUrl] = await processSingleUrl(processUrl, affiliateId);
-      results.push({ original: processUrl, affiliate: affUrl || "Khong ho tro" });
+      results.push({ original: processUrl, affiliate: affUrl || "Không hỗ trợ" });
     }
   }
 
   if (results.length === 0) {
-    return NextResponse.json({ error: "Khong tim thay link hop le" }, { status: 400 });
+    return NextResponse.json({ error: "Không tìm thấy link hợp lệ" }, { status: 400 });
   }
 
   return NextResponse.json({ success: true, results });

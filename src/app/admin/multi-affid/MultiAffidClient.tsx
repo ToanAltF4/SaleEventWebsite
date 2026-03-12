@@ -33,7 +33,7 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
   const [convertResults, setConvertResults] = useState<Record<number, string>>({});
 
   async function addMultiAffid() {
-    if (!newAffid.trim()) { setAddStatus({ msg: "Vui long nhap Affiliate ID", type: "error" }); return; }
+    if (!newAffid.trim()) { setAddStatus({ msg: "Vui lòng nhập Affiliate ID", type: "error" }); return; }
     try {
       const res = await fetch("/api/multi-affid/add", {
         method: "POST",
@@ -46,24 +46,24 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
         setNewAffid("");
         setNewName("");
       } else setAddStatus({ msg: data.error, type: "error" });
-    } catch { setAddStatus({ msg: "Loi ket noi", type: "error" }); }
+    } catch { setAddStatus({ msg: "Lỗi kết nối", type: "error" }); }
   }
 
   async function deleteMultiAffid(id: number) {
-    if (!confirm("Xoa Affiliate ID nay va tat ca link lien quan?")) return;
+    if (!confirm("Xóa Affiliate ID này và tất cả link liên quan?")) return;
     try {
       const res = await fetch(`/api/multi-affid/delete/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) router.refresh();
-      else alert(data.error || "Loi xoa");
-    } catch { alert("Loi ket noi"); }
+      else alert(data.error || "Lỗi xóa");
+    } catch { alert("Lỗi kết nối"); }
   }
 
   async function convertMultiAffid(affidId: number) {
     const url = convertUrls[affidId]?.trim();
-    if (!url) { setConvertStatuses(s => ({...s, [affidId]: { msg: "Vui long nhap link", type: "error" }})); return; }
+    if (!url) { setConvertStatuses(s => ({...s, [affidId]: { msg: "Vui lòng nhập link", type: "error" }})); return; }
 
-    setConvertStatuses(s => ({...s, [affidId]: { msg: "Dang chuyen doi...", type: "loading" }}));
+    setConvertStatuses(s => ({...s, [affidId]: { msg: "Đang chuyển đổi...", type: "loading" }}));
     setConvertResults(s => ({...s, [affidId]: ""}));
 
     try {
@@ -85,7 +85,7 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
         setConvertStatuses(s => ({...s, [affidId]: { msg: data.error, type: "error" }}));
       }
     } catch {
-      setConvertStatuses(s => ({...s, [affidId]: { msg: "Loi ket noi", type: "error" }}));
+      setConvertStatuses(s => ({...s, [affidId]: { msg: "Lỗi kết nối", type: "error" }}));
     }
   }
 
@@ -93,16 +93,16 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
     <>
       <div style={{textAlign:'center',marginBottom:'20px',padding:'8px 0'}}>
         <h3 style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Multi Affiliate</h3>
-        <p style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Quan ly nhieu Affiliate ID &mdash; Tao link &amp; theo doi click rieng biet</p>
+        <p style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Quản lý nhiều Affiliate ID &mdash; Tạo link &amp; theo dõi click riêng biệt</p>
       </div>
 
       {/* Add new */}
       <div className="card">
-        <div className="card-title">Them Affiliate ID moi</div>
+        <div className="card-title">Thêm Affiliate ID mới</div>
         <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
-          <input type="text" value={newAffid} onChange={e => setNewAffid(e.target.value)} placeholder="Nhap Affiliate ID" style={{flex:1,minWidth:'160px'}} />
-          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ten goi nho (tuy chon)" style={{flex:1,minWidth:'140px'}} />
-          <button className="btn btn-primary" onClick={addMultiAffid}>Them</button>
+          <input type="text" value={newAffid} onChange={e => setNewAffid(e.target.value)} placeholder="Nhập Affiliate ID" style={{flex:1,minWidth:'160px'}} />
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Tên gợi nhớ (tùy chọn)" style={{flex:1,minWidth:'140px'}} />
+          <button className="btn btn-primary" onClick={addMultiAffid}>Thêm</button>
         </div>
         {addStatus && <div className={`status ${addStatus.type}`}>{addStatus.msg}</div>}
       </div>
@@ -114,19 +114,19 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
               <div style={{fontSize:'15px',fontWeight:700,color:'var(--text)'}}>
                 {affid.name || "Affiliate"} <span style={{fontSize:'12px',color:'var(--text-muted)',fontWeight:500}}>#{affid.affid}</span>
               </div>
-              <div style={{fontSize:'11px',color:'var(--text-muted)',marginTop:'2px'}}>Tao luc: {affid.created_at}</div>
+              <div style={{fontSize:'11px',color:'var(--text-muted)',marginTop:'2px'}}>Tạo lúc: {affid.created_at}</div>
             </div>
             <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
               <span style={{background:'var(--primary)',color:'#fff',padding:'3px 10px',borderRadius:'12px',fontSize:'11px',fontWeight:700}}>{affid.total_links} link</span>
               <span style={{background:'#E8F5E9',color:'#2E7D32',padding:'3px 10px',borderRadius:'12px',fontSize:'11px',fontWeight:700}}>{affid.total_clicks} click</span>
-              <button onClick={() => deleteMultiAffid(affid.id)} style={{background:'none',border:'1px solid #ffcdd2',borderRadius:'6px',padding:'4px 10px',cursor:'pointer',fontSize:'11px',fontWeight:700,color:'#C62828',fontFamily:"'Quicksand',sans-serif"}}>Xoa</button>
+              <button onClick={() => deleteMultiAffid(affid.id)} style={{background:'none',border:'1px solid #ffcdd2',borderRadius:'6px',padding:'4px 10px',cursor:'pointer',fontSize:'11px',fontWeight:700,color:'#C62828',fontFamily:"'Quicksand',sans-serif"}}>Xóa</button>
             </div>
           </div>
 
           {/* Convert link */}
           <div style={{display:'flex',gap:'8px',marginBottom:'10px'}}>
-            <input type="text" value={convertUrls[affid.id] || ""} onChange={e => setConvertUrls(s => ({...s, [affid.id]: e.target.value}))} placeholder="Dan link Shopee vao day..." style={{flex:1}} />
-            <button className="btn btn-dark" onClick={() => convertMultiAffid(affid.id)}>Tao link</button>
+            <input type="text" value={convertUrls[affid.id] || ""} onChange={e => setConvertUrls(s => ({...s, [affid.id]: e.target.value}))} placeholder="Dán link Shopee vào đây..." style={{flex:1}} />
+            <button className="btn btn-dark" onClick={() => convertMultiAffid(affid.id)}>Tạo link</button>
           </div>
           {convertStatuses[affid.id] && <div className={`status ${convertStatuses[affid.id]!.type}`}>{convertStatuses[affid.id]!.msg}</div>}
           {convertResults[affid.id] && (
@@ -141,14 +141,14 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
           {/* Links table */}
           {affid.links.length > 0 && (
             <div style={{marginTop:'14px'}}>
-              <div style={{fontSize:'12px',fontWeight:700,color:'var(--text-sec)',marginBottom:'8px',textTransform:'uppercase'}}>Link da tao</div>
+              <div style={{fontSize:'12px',fontWeight:700,color:'var(--text-sec)',marginBottom:'8px',textTransform:'uppercase'}}>Link đã tạo</div>
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse',fontSize:'12px'}}>
                   <thead>
                     <tr style={{borderBottom:'2px solid var(--border)',textAlign:'left'}}>
-                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link rut gon</th>
-                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link goc</th>
-                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Ngay tao</th>
+                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link rút gọn</th>
+                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link gốc</th>
+                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Ngày tạo</th>
                       <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)',textAlign:'center'}}>Click</th>
                     </tr>
                   </thead>
@@ -195,13 +195,13 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
 
           {affid.total_links === 0 && (
             <div style={{marginTop:'12px',padding:'16px',textAlign:'center',fontSize:'12px',color:'var(--text-muted)',fontWeight:600,background:'var(--primary-bg)',borderRadius:'8px'}}>
-              Chua co link nao duoc tao
+              Chưa có link nào được tạo
             </div>
           )}
         </div>
       )) : (
         <div className="card" style={{textAlign:'center',padding:'32px'}}>
-          <div style={{fontSize:'14px',color:'var(--text-muted)',fontWeight:600}}>Chua co Affiliate ID nao. Hay them o tren!</div>
+          <div style={{fontSize:'14px',color:'var(--text-muted)',fontWeight:600}}>Chưa có Affiliate ID nào. Hãy thêm ở trên!</div>
         </div>
       )}
     </>

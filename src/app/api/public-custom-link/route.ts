@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
     if (!checkRateLimit(ip)) {
       return NextResponse.json(
-        { error: "Ban da tao qua nhieu link. Vui long thu lai sau 1 gio." },
+        { error: "Bạn đã tạo quá nhiều link. Vui lòng thử lại sau 1 giờ." },
         { status: 429 }
       );
     }
@@ -23,12 +23,12 @@ export async function POST(req: NextRequest) {
 
   const { url: rawUrlInput } = await req.json();
   if (!rawUrlInput?.trim()) {
-    return NextResponse.json({ error: "Vui long nhap link" }, { status: 400 });
+    return NextResponse.json({ error: "Vui lòng nhập link" }, { status: 400 });
   }
 
   const cookie = await getSetting("shopee_cookie", "");
   if (!cookie) {
-    return NextResponse.json({ error: "Chua cau hinh cookie" }, { status: 400 });
+    return NextResponse.json({ error: "Chưa cấu hình cookie" }, { status: 400 });
   }
 
   let url = rawUrlInput.trim();
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!isShopeeUrl(url)) {
-    return NextResponse.json({ error: "Khong phai link Shopee" }, { status: 400 });
+    return NextResponse.json({ error: "Không phải link Shopee" }, { status: 400 });
   }
 
   url = cleanShopeeUrl(url);
@@ -103,9 +103,9 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({ error: `Shopee API failCode: ${item.failCode}` }, { status: 400 });
     }
-    return NextResponse.json({ error: "Response khong dung format" }, { status: 400 });
+    return NextResponse.json({ error: "Response không đúng format" }, { status: 400 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: `Loi ket noi Shopee: ${msg}` }, { status: 500 });
+    return NextResponse.json({ error: `Lỗi kết nối Shopee: ${msg}` }, { status: 500 });
   }
 }

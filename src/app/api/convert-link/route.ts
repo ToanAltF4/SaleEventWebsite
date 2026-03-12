@@ -9,12 +9,12 @@ export async function POST(req: NextRequest) {
 
   const { urls: rawUrls } = await req.json();
   if (!rawUrls?.trim()) {
-    return NextResponse.json({ error: "Vui long nhap it nhat 1 link" }, { status: 400 });
+    return NextResponse.json({ error: "Vui lòng nhập ít nhất 1 link" }, { status: 400 });
   }
 
   const affiliateId = await getSetting("affiliate_id", "");
   if (!affiliateId) {
-    return NextResponse.json({ error: "Vui long cai dat Affiliate ID truoc" }, { status: 400 });
+    return NextResponse.json({ error: "Vui lòng cài đặt Affiliate ID trước" }, { status: 400 });
   }
 
   const lines = rawUrls.split("\n");
@@ -28,20 +28,20 @@ export async function POST(req: NextRequest) {
     if (found.length > 0) {
       for (const url of found) {
         const [affUrl] = await processSingleUrl(url, affiliateId);
-        const displayUrl = affUrl ? await createShortUrl(affUrl, user) : "Khong ho tro";
+        const displayUrl = affUrl ? await createShortUrl(affUrl, user) : "Không hỗ trợ";
         results.push({ original: url, affiliate: displayUrl });
       }
     } else if (line.startsWith("http") || line.startsWith("s.shopee") || line.startsWith("shopee")) {
       let processUrl = line;
       if (!processUrl.startsWith("http")) processUrl = "https://" + processUrl;
       const [affUrl] = await processSingleUrl(processUrl, affiliateId);
-      const displayUrl = affUrl ? await createShortUrl(affUrl, user) : "Khong ho tro";
+      const displayUrl = affUrl ? await createShortUrl(affUrl, user) : "Không hỗ trợ";
       results.push({ original: processUrl, affiliate: displayUrl });
     }
   }
 
   if (results.length === 0) {
-    return NextResponse.json({ error: "Khong tim thay link hop le" }, { status: 400 });
+    return NextResponse.json({ error: "Không tìm thấy link hợp lệ" }, { status: 400 });
   }
 
   return NextResponse.json({ success: true, results });

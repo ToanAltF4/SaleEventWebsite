@@ -7,7 +7,7 @@ export interface SessionData {
 }
 
 const sessionOptions = {
-  password: process.env.SECRET_KEY || "kimngan-sale-secret-2026-at-least-32-chars",
+  password: process.env.SECRET_KEY || "default-fallback-key-must-be-32-chars!",
   cookieName: "kimngan-session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",

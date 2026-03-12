@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
   const { affid, name } = await req.json();
   if (!affid?.trim()) {
-    return NextResponse.json({ error: "Affiliate ID khong duoc de trong" }, { status: 400 });
+    return NextResponse.json({ error: "Affiliate ID không được để trống" }, { status: 400 });
   }
 
   await createMultiAffid(affid.trim(), name?.trim() || "");

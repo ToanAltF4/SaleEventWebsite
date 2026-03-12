@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
   const { cookie } = await req.json();
   if (!cookie?.trim()) {
-    return NextResponse.json({ error: "Cookie khong duoc de trong" }, { status: 400 });
+    return NextResponse.json({ error: "Cookie không được để trống" }, { status: 400 });
   }
 
   await setSetting("shopee_cookie", cookie.trim());

@@ -15,7 +15,6 @@ export default function HomeClient({ user }: { user: string | null }) {
       setShowSplash(true);
       sessionStorage.setItem("splashShown", "1");
 
-      // Generate fireworks
       const container = document.getElementById("fwContainer");
       if (container) {
         const colors = ["#E8567F","#F78DA7","#FF6B9D","#FFB6C1","#FF85A2","#E91E63","#FF4081","#F50057","#FF69B4","#DB7093","#C71585","#FFD700","#FFA500","#FF6347"];
@@ -50,7 +49,6 @@ export default function HomeClient({ user }: { user: string | null }) {
         });
       }
 
-      // Sparkles
       setTimeout(() => {
         ["sp1","sp2","sp3","sp4"].forEach((id, i) => {
           const el = document.getElementById(id);
@@ -61,7 +59,6 @@ export default function HomeClient({ user }: { user: string | null }) {
         });
       }, 1400);
 
-      // Dismiss splash
       setTimeout(() => {
         const splash = splashRef.current;
         if (splash) {
@@ -77,7 +74,7 @@ export default function HomeClient({ user }: { user: string | null }) {
       const text = await navigator.clipboard.readText();
       setUrl(text);
     } catch {
-      setStatus({ msg: "Khong the paste. Hay dung Ctrl+V", type: "error" });
+      setStatus({ msg: "Không thể paste. Hãy dùng Ctrl+V", type: "error" });
       setTimeout(() => setStatus(null), 3000);
     }
   }
@@ -88,13 +85,13 @@ export default function HomeClient({ user }: { user: string | null }) {
 
   async function handleConvert() {
     if (!url.trim()) {
-      setStatus({ msg: "Vui long nhap link Shopee", type: "error" });
+      setStatus({ msg: "Vui lòng nhập link Shopee", type: "error" });
       setTimeout(() => setStatus(null), 3000);
       return;
     }
 
     setLoading(true);
-    setStatus({ msg: "Dang chuyen doi link...", type: "loading" });
+    setStatus({ msg: "Đang chuyển đổi link...", type: "loading" });
     let apiSuccess = false;
 
     try {
@@ -121,19 +118,19 @@ export default function HomeClient({ user }: { user: string | null }) {
         const data = await res.json();
         if (data.success && data.results?.length > 0) {
           const affLink = data.results[0].affiliate;
-          if (affLink === "Khong ho tro") {
-            setStatus({ msg: "Link khong ho tro. Vui long nhap link Shopee hop le.", type: "error" });
+          if (affLink === "Không hỗ trợ") {
+            setStatus({ msg: "Link không hỗ trợ. Vui lòng nhập link Shopee hợp lệ.", type: "error" });
             setResult("");
           } else {
             setResult(affLink);
             setStatus(null);
           }
         } else {
-          setStatus({ msg: data.error || "Khong tim thay link hop le", type: "error" });
+          setStatus({ msg: data.error || "Không tìm thấy link hợp lệ", type: "error" });
           setResult("");
         }
       } catch {
-        setStatus({ msg: "Loi ket noi server", type: "error" });
+        setStatus({ msg: "Lỗi kết nối server", type: "error" });
       }
     }
 
@@ -203,7 +200,7 @@ export default function HomeClient({ user }: { user: string | null }) {
       {showSplash && (
         <div className="splash" ref={splashRef}>
           <div id="fwContainer"></div>
-          <div className="splash-greeting">San Sale Cung Kim Ngan</div>
+          <div className="splash-greeting">Săn Sale Cùng Kim Ngân</div>
           <div className="splash-sparkle" id="sp1" style={{ "--sparkle-dir": "translate(-30px,-40px)" } as React.CSSProperties}>&#10024;</div>
           <div className="splash-sparkle" id="sp2" style={{ "--sparkle-dir": "translate(30px,-35px)" } as React.CSSProperties}>&#128150;</div>
           <div className="splash-sparkle" id="sp3" style={{ "--sparkle-dir": "translate(-25px,30px)" } as React.CSSProperties}>&#127800;</div>
@@ -213,18 +210,18 @@ export default function HomeClient({ user }: { user: string | null }) {
 
       <div className="converter-section">
         <div className="converter-wrap">
-          <div className="converter-title">Tao Link Mua Hang Ma Doc Quyen Facebook</div>
+          <div className="converter-title">Tạo Link Mua Hàng Mã Độc Quyền Facebook</div>
 
           <div className="converter-block">
-            <div className="converter-label">Link goc Shopee</div>
+            <div className="converter-label">Link gốc Shopee</div>
             <div className="input-row">
-              <input type="text" value={url} onChange={e => setUrl(e.target.value)} placeholder="Dan link Shopee vao day..." onKeyDown={e => e.key === "Enter" && handleConvert()} />
+              <input type="text" value={url} onChange={e => setUrl(e.target.value)} placeholder="Dán link Shopee vào đây..." onKeyDown={e => e.key === "Enter" && handleConvert()} />
               <button className="paste-btn" onClick={handlePaste}>Paste</button>
             </div>
           </div>
 
           <button className="convert-btn" onClick={handleConvert} disabled={loading}>
-            {loading ? "Dang xu ly..." : "Tao link nhan ma Doc Quyen Facebook"}
+            {loading ? "Đang xử lý..." : "Tạo link nhận mã Độc Quyền Facebook"}
           </button>
 
           {status && (
@@ -233,22 +230,22 @@ export default function HomeClient({ user }: { user: string | null }) {
 
           {result && (
             <div className="result-block">
-              <div className="converter-label">Link da co voucher</div>
+              <div className="converter-label">Link đã có voucher</div>
               <div className="input-row">
                 <input type="text" value={result} readOnly className="result-input" />
                 <button className="copy-btn-home" onClick={handleCopy}>Copy</button>
               </div>
-              <a href={result} className="visit-btn" target="_blank">Truy cap nhanh</a>
+              <a href={result} className="visit-btn" target="_blank">Truy cập nhanh</a>
             </div>
           )}
 
           <div className="promo-instruction">
-            <div style={{display:'flex',gap:'8px'}}><span>1&#65039;&#8419;</span><span>Copy link &amp; comment vao bai viet ben duoi</span></div>
-            <div style={{display:'flex',gap:'8px'}}><span>2&#65039;&#8419;</span><span>Click vao link vua comment sang Shopee ma se tu dong luu</span></div>
+            <div style={{display:'flex',gap:'8px'}}><span>1&#65039;&#8419;</span><span>Copy link &amp; comment vào bài viết bên dưới</span></div>
+            <div style={{display:'flex',gap:'8px'}}><span>2&#65039;&#8419;</span><span>Click vào link vừa comment sang Shopee mã sẽ tự động lưu</span></div>
           </div>
-          <a href="https://www.facebook.com/share/p/1C4do57ne2/" target="_blank" className="fb-post-btn">Truy cap bai viet</a>
+          <a href="https://www.facebook.com/share/p/1C4do57ne2/" target="_blank" className="fb-post-btn">Truy cập bài viết</a>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/promo-20.jpg" alt="Ma giam 20%" className="promo-img" />
+          <img src="/promo-20.jpg" alt="Mã giảm 20%" className="promo-img" />
         </div>
       </div>
     </>

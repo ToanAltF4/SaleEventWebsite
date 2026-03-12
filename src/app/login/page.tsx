@@ -26,10 +26,10 @@ export default function LoginPage() {
         router.push("/admin/convert-link");
         router.refresh();
       } else {
-        setError(data.error || "Sai tai khoan hoac mat khau");
+        setError(data.error || "Sai tài khoản hoặc mật khẩu");
       }
     } catch {
-      setError("Loi ket noi server");
+      setError("Lỗi kết nối server");
     }
     setLoading(false);
   }
@@ -37,6 +37,9 @@ export default function LoginPage() {
   return (
     <>
       <style jsx>{`
+        .login-page { min-height: 100vh; display: flex; flex-direction: column; }
+        .login-topnav { background: var(--primary); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; color: #fff; }
+        .login-topnav a { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 700; font-style: italic; color: #fff; text-decoration: none; }
         .login-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
         .login-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 36px 32px; width: 100%; max-width: 380px; }
         .login-header { text-align: center; margin-bottom: 28px; }
@@ -46,31 +49,43 @@ export default function LoginPage() {
         .login-field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-sec); margin-bottom: 6px; }
         .login-btn { width: 100%; margin-top: 8px; padding: 12px; font-size: 15px; }
         .login-error { background: #FFEBEE; color: #C62828; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 16px; text-align: center; }
-        @media (max-width: 768px) { .login-card { padding: 28px 20px; } .login-header h2 { font-size: 22px; } }
+        .login-footer { background: var(--card-bg); border-top: 1px solid var(--border); padding: 18px 24px; text-align: center; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .login-footer .accent { color: var(--primary); }
+        @media (max-width: 768px) { .login-card { padding: 28px 20px; } .login-header h2 { font-size: 22px; } .login-topnav a { font-size: 16px; } }
       `}</style>
 
-      <div className="login-wrapper">
-        <div className="login-card">
-          <div className="login-header">
-            <h2>Dang nhap</h2>
-            <p>Vui long dang nhap de su dung dashboard</p>
+      <div className="login-page">
+        <div className="login-topnav">
+          <a href="/">Săn Sale Cùng Kim Ngân</a>
+        </div>
+
+        <div className="login-wrapper">
+          <div className="login-card">
+            <div className="login-header">
+              <h2>Đăng nhập</h2>
+              <p>Vui lòng đăng nhập để sử dụng dashboard</p>
+            </div>
+
+            {error && <div className="login-error">{error}</div>}
+
+            <form onSubmit={handleSubmit}>
+              <div className="login-field">
+                <label>Tài khoản</label>
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Nhập tên đăng nhập" required autoFocus />
+              </div>
+              <div className="login-field">
+                <label>Mật khẩu</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Nhập mật khẩu" required />
+              </div>
+              <button type="submit" className="btn btn-primary login-btn" disabled={loading}>
+                {loading ? "Đang xử lý..." : "Đăng nhập"}
+              </button>
+            </form>
           </div>
+        </div>
 
-          {error && <div className="login-error">{error}</div>}
-
-          <form onSubmit={handleSubmit}>
-            <div className="login-field">
-              <label>Tai khoan</label>
-              <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Nhap ten dang nhap" required autoFocus />
-            </div>
-            <div className="login-field">
-              <label>Mat khau</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Nhap mat khau" required />
-            </div>
-            <button type="submit" className="btn btn-primary login-btn" disabled={loading}>
-              {loading ? "Dang xu ly..." : "Dang nhap"}
-            </button>
-          </form>
+        <div className="login-footer">
+          &copy; 2026 <span className="accent">Săn Sale Cùng Kim Ngân</span> &middot; Dev by <span className="accent">Phạm Toàn</span>
         </div>
       </div>
     </>

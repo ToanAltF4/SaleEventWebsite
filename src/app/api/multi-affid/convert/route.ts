@@ -9,17 +9,17 @@ export async function POST(req: NextRequest) {
 
   const { affid_id, url } = await req.json();
   if (!affid_id || !url?.trim()) {
-    return NextResponse.json({ error: "Thieu thong tin" }, { status: 400 });
+    return NextResponse.json({ error: "Thiếu thông tin" }, { status: 400 });
   }
 
   const affidRecord = await getMultiAffid(affid_id);
   if (!affidRecord) {
-    return NextResponse.json({ error: "Khong tim thay Affiliate ID" }, { status: 404 });
+    return NextResponse.json({ error: "Không tìm thấy Affiliate ID" }, { status: 404 });
   }
 
   const [affUrl, original] = await processSingleUrl(url.trim(), affidRecord.affid);
   if (!affUrl) {
-    return NextResponse.json({ error: "Khong the chuyen doi link nay" }, { status: 400 });
+    return NextResponse.json({ error: "Không thể chuyển đổi link này" }, { status: 400 });
   }
 
   const existing = await findMultiAffidLinkByTarget(affid_id, affUrl);

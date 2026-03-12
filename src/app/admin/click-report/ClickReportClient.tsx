@@ -27,7 +27,7 @@ export default function ClickReportClient({
   const [affStatus, setAffStatus] = useState<{ msg: string; type: string } | null>(null);
 
   async function saveAffiliate() {
-    if (!affId.trim()) { setAffStatus({ msg: "Vui long nhap Affiliate ID", type: "error" }); return; }
+    if (!affId.trim()) { setAffStatus({ msg: "Vui lòng nhập Affiliate ID", type: "error" }); return; }
     try {
       const res = await fetch("/api/save-affiliate", {
         method: "POST",
@@ -36,10 +36,10 @@ export default function ClickReportClient({
       });
       const data = await res.json();
       if (data.success) {
-        setAffStatus({ msg: "Da luu thanh cong!", type: "success" });
+        setAffStatus({ msg: "Đã lưu thành công!", type: "success" });
         setTimeout(() => setAffStatus(null), 3000);
       } else setAffStatus({ msg: data.error, type: "error" });
-    } catch { setAffStatus({ msg: "Loi ket noi", type: "error" }); }
+    } catch { setAffStatus({ msg: "Lỗi kết nối", type: "error" }); }
   }
 
   return (
@@ -48,60 +48,60 @@ export default function ClickReportClient({
       <div className="card">
         <div className="card-title">Affiliate ID</div>
         <div style={{display:'flex',gap:'8px'}}>
-          <input type="text" value={affId} onChange={e => setAffId(e.target.value)} placeholder="Nhap Affiliate ID cua ban" />
-          <button className="btn btn-dark" onClick={saveAffiliate}>Luu</button>
+          <input type="text" value={affId} onChange={e => setAffId(e.target.value)} placeholder="Nhập Affiliate ID của bạn" />
+          <button className="btn btn-dark" onClick={saveAffiliate}>Lưu</button>
         </div>
         {affStatus && <div className={`status ${affStatus.type}`}>{affStatus.msg}</div>}
       </div>
 
       <div style={{textAlign:'center',marginBottom:'20px',padding:'8px 0'}}>
-        <h3 style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Bao Cao Click</h3>
-        <p style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Thong ke luot click tu cac link rut gon do Admin tao</p>
+        <h3 style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Báo Cáo Click</h3>
+        <p style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Thống kê lượt click từ các link rút gọn do Admin tạo</p>
       </div>
 
       {/* Stats */}
       <div style={{display:'flex',gap:'10px',marginBottom:'14px'}}>
         <div className="card" style={{flex:1,textAlign:'center',marginBottom:0}}>
           <div style={{fontSize:'24px',fontWeight:700,color:'var(--primary)'}}>{totalLinks}</div>
-          <div style={{fontSize:'12px',fontWeight:600,color:'var(--text-sec)'}}>Tong link</div>
+          <div style={{fontSize:'12px',fontWeight:600,color:'var(--text-sec)'}}>Tổng link</div>
         </div>
         <div className="card" style={{flex:1,textAlign:'center',marginBottom:0}}>
           <div style={{fontSize:'24px',fontWeight:700,color:'var(--primary)'}}>{totalClicks}</div>
-          <div style={{fontSize:'12px',fontWeight:600,color:'var(--text-sec)'}}>Tong click</div>
+          <div style={{fontSize:'12px',fontWeight:600,color:'var(--text-sec)'}}>Tổng click</div>
         </div>
       </div>
 
       {/* Filter */}
       <div className="card">
-        <div className="card-title">Bo loc</div>
+        <div className="card-title">Bộ lọc</div>
         <form method="GET" action="/admin/click-report" style={{display:'flex',gap:'8px',flexWrap:'wrap',alignItems:'flex-end'}}>
           <div style={{flex:1,minWidth:'140px'}}>
-            <label style={{fontSize:'11px',fontWeight:700,color:'var(--text-sec)',display:'block',marginBottom:'4px'}}>Tim kiem</label>
-            <input type="text" name="q" placeholder="Short code hoac link..." defaultValue={search} style={{padding:'8px 10px',fontSize:'13px'}} />
+            <label style={{fontSize:'11px',fontWeight:700,color:'var(--text-sec)',display:'block',marginBottom:'4px'}}>Tìm kiếm</label>
+            <input type="text" name="q" placeholder="Short code hoặc link..." defaultValue={search} style={{padding:'8px 10px',fontSize:'13px'}} />
           </div>
           <div style={{minWidth:'130px'}}>
-            <label style={{fontSize:'11px',fontWeight:700,color:'var(--text-sec)',display:'block',marginBottom:'4px'}}>Tu ngay</label>
+            <label style={{fontSize:'11px',fontWeight:700,color:'var(--text-sec)',display:'block',marginBottom:'4px'}}>Từ ngày</label>
             <input type="date" name="from" defaultValue={dateFrom} style={{padding:'8px 10px',fontSize:'13px'}} />
           </div>
           <div style={{minWidth:'130px'}}>
-            <label style={{fontSize:'11px',fontWeight:700,color:'var(--text-sec)',display:'block',marginBottom:'4px'}}>Den ngay</label>
+            <label style={{fontSize:'11px',fontWeight:700,color:'var(--text-sec)',display:'block',marginBottom:'4px'}}>Đến ngày</label>
             <input type="date" name="to" defaultValue={dateTo} style={{padding:'8px 10px',fontSize:'13px'}} />
           </div>
-          <button type="submit" className="btn btn-primary" style={{padding:'9px 18px',fontSize:'13px'}}>Loc</button>
-          <a href="/admin/click-report" className="btn btn-outline" style={{padding:'9px 18px',fontSize:'13px',textDecoration:'none',textAlign:'center'}}>Xoa loc</a>
+          <button type="submit" className="btn btn-primary" style={{padding:'9px 18px',fontSize:'13px'}}>Lọc</button>
+          <a href="/admin/click-report" className="btn btn-outline" style={{padding:'9px 18px',fontSize:'13px',textDecoration:'none',textAlign:'center'}}>Xóa lọc</a>
         </form>
       </div>
 
       {/* Table */}
       <div className="card">
-        <div className="card-title">Danh sach link ({links.length})</div>
+        <div className="card-title">Danh sách link ({links.length})</div>
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:'13px'}}>
             <thead>
               <tr style={{borderBottom:'2px solid var(--border)',textAlign:'left'}}>
-                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link rut gon</th>
-                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link goc (affiliate)</th>
-                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Ngay tao</th>
+                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link rút gọn</th>
+                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link gốc (affiliate)</th>
+                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Ngày tạo</th>
                 <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)',textAlign:'center'}}>Click</th>
               </tr>
             </thead>
@@ -128,7 +128,7 @@ export default function ClickReportClient({
                 </tr>
               )) : (
                 <tr><td colSpan={4} style={{padding:'24px',textAlign:'center',color:'var(--text-muted)',fontWeight:600}}>
-                  {search || dateFrom || dateTo ? "Khong tim thay link phu hop" : "Chua co link nao duoc tao tu Dashboard"}
+                  {search || dateFrom || dateTo ? "Không tìm thấy link phù hợp" : "Chưa có link nào được tạo từ Dashboard"}
                 </td></tr>
               )}
             </tbody>

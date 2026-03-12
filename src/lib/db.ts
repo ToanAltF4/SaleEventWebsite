@@ -9,7 +9,7 @@ const DB_CONFIG = {
   database: process.env.DB_NAME || "saleevent",
   charset: "utf8mb4",
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 3,
 };
 
 let pool: mysql.Pool | null = null;
@@ -97,15 +97,17 @@ export async function initDb() {
   `);
 
   // Create default admin user if not exists
+  const defaultUser = process.env.ADMIN_USER || "admin";
+  const defaultPass = process.env.ADMIN_PASS || "changeme123!@#changemeplease";
   const [rows] = await db.execute<mysql.RowDataPacket[]>(
     "SELECT id FROM users WHERE username = ?",
-    ["kimngan"]
+    [defaultUser]
   );
   if (rows.length === 0) {
-    const pwHash = hashSync("Kn@1802", 10);
+    const pwHash = hashSync(defaultPass, 10);
     await db.execute(
       "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-      ["kimngan", pwHash]
+      [defaultUser, pwHash]
     );
   }
 }
@@ -192,7 +194,7 @@ export async function getHistory(limit = 20): Promise<mysql.RowDataPacket[]> {
   const db = getPool();
   const [rows] = await db.execute<mysql.RowDataPacket[]>(
     "SELECT * FROM history ORDER BY created_at DESC LIMIT ?",
-    [limit]
+    [String(limit)]
   );
   return rows;
 }
@@ -347,7 +349,7 @@ export async function getMultiAffidLinks(affidId: number, page = 1, perPage = 10
 
   const [rows] = await db.execute<mysql.RowDataPacket[]>(
     "SELECT * FROM multi_affid_links WHERE affid_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
-    [affidId, perPage, offset]
+    [affidId, String(perPage), String(offset)]
   );
 
   return { links: rows, total };
