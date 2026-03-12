@@ -1,9 +1,0 @@
-flask
-python-dotenv
-openai
-requests
-bcrypt
-flask-limiter
-pymysql
-curl_cffi
-werkzeug
