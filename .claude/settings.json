@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(cp \"d:/web-ngan/SaleEventWebsite/static/logospvideo.jpg\" \"d:/web-ngan/sale-event-nextjs/public/\")",
+      "Bash(cp \"d:/web-ngan/SaleEventWebsite/static/promo-20.jpg\" \"d:/web-ngan/sale-event-nextjs/public/\")",
+      "Bash(cp \"d:/web-ngan/SaleEventWebsite/verify_prompt.txt\" \"d:/web-ngan/sale-event-nextjs/\")",
+      "Bash(npm install:*)",
+      "Bash(npx next:*)",
+      "Bash(rm -rf templates/ static/ __pycache__/)",
+      "Bash(rm -f app.py database.py expand_url.py requirements.txt mysql_schema.sql affiliate_config.json start.bat API_CUSTOM_LINK.md DEPLOY.md note.txt nul app.db server.js package.json 591W697bbc4a2cb3a.txt TMD169836c24e8ed3.txt Icon-Zalo-2021.jpg)",
+      "Bash(cp -r package.json next.config.js tsconfig.json .gitignore ecosystem.config.js verify_prompt.txt \"d:/web-ngan/SaleEventWebsite/\")",
+      "Bash(cp -r src/ \"d:/web-ngan/SaleEventWebsite/\")",
+      "Bash(cp -r public/ \"d:/web-ngan/SaleEventWebsite/\")"
+    ],
+    "additionalDirectories": [
+      "d:\\web-ngan\\sale-event-nextjs\\src",
+      "d:\\web-ngan\\sale-event-nextjs"
+    ]
+  }
+}

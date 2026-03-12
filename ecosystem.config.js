@@ -4,7 +4,7 @@ module.exports = {
       name: "kimngan-sale",
       script: "node_modules/.bin/next",
       args: "start -p 3838",
-      cwd: "/root/sale-event-nextjs",
+      cwd: "/root/SaleEventWebsite",
       env: {
         NODE_ENV: "production",
         PORT: 3838,

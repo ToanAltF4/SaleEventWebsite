@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del \"d:\\\\web-ngan\\\\SaleEventWebsite\\\\app.db\")",
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(pip freeze:*)",
+      "Bash(nslookup:*)",
+      "Bash(cloudflared tunnel route dns:*)",
+      "Bash(python:*)",
+      "Bash(git checkout:*)",
+      "Bash(del \"d:\\\\web-ngan\\\\SaleEventWebsite\\\\templates\\\\test_custom_link.html\")",
+      "Bash(dir:*)",
+      "Bash(powershell:*)"
+    ]
+  }
+}
