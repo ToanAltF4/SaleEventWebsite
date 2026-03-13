@@ -83,10 +83,22 @@ export function extractOriginFromRedirect(url: string): string | null {
 export async function expandShortUrl(shortUrl: string): Promise<string | null> {
   try {
     const resp = await fetch(shortUrl, {
-      redirect: "follow",
+      redirect: "manual",
       signal: AbortSignal.timeout(10000),
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      },
     });
-    return resp.url;
+    const location = resp.headers.get("location");
+    if (location) {
+      // Handle relative redirects
+      if (location.startsWith("/")) {
+        const parsed = new URL(shortUrl);
+        return `${parsed.protocol}//${parsed.host}${location}`;
+      }
+      return location;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -141,7 +153,7 @@ export async function processSingleUrl(url: string, affiliateId: string): Promis
 }
 
 export function extractUrlsFromText(text: string): string[] {
-  const pattern = /https?:\/\/[^\s<>"')\]}/]+/g;
+  const pattern = /https?:\/\/[^\s<>"')\]}]+/g;
   return text.match(pattern) || [];
 }
 

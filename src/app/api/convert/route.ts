@@ -29,14 +29,18 @@ export async function POST(req: NextRequest) {
 
   const urls = extractUrlsFromText(message);
 
-  const linkMapping: Record<string, string> = {};
+  // Tạo affiliate URL → short URL TRƯỚC khi gửi cho AI
+  const shortMapping: Record<string, string> = {};
   for (const url of urls) {
     const [affUrl] = await processSingleUrl(url, affiliateId);
-    if (affUrl) linkMapping[url] = affUrl;
+    if (affUrl) {
+      const shortUrl = await createShortUrl(affUrl, user);
+      shortMapping[url] = shortUrl;
+    }
   }
 
-  const mappingText = Object.keys(linkMapping).length > 0
-    ? Object.entries(linkMapping).map(([orig, aff]) => `- ${orig} -> ${aff}`).join("\n")
+  const mappingText = Object.keys(shortMapping).length > 0
+    ? Object.entries(shortMapping).map(([orig, short]) => `- ${orig} -> ${short}`).join("\n")
     : "(Không có link Shopee cần chuyển đổi. Giữ nguyên tất cả link trong tin nhắn.)";
 
   const promptTemplate = loadVerifyPrompt();
@@ -51,15 +55,7 @@ export async function POST(req: NextRequest) {
       temperature: 0.1,
     });
 
-    let converted = response.choices[0].message.content?.trim() || "";
-
-    // Replace affiliate URLs with short URLs
-    const shortMapping: Record<string, string> = {};
-    for (const [orig, aff] of Object.entries(linkMapping)) {
-      const shortUrl = await createShortUrl(aff, user);
-      shortMapping[orig] = shortUrl;
-      converted = converted.split(aff).join(shortUrl);
-    }
+    const converted = response.choices[0].message.content?.trim() || "";
 
     await addHistory(message, converted);
 
@@ -68,7 +64,7 @@ export async function POST(req: NextRequest) {
       original: message,
       converted,
       links_found: urls.length,
-      links_converted: Object.keys(linkMapping).length,
+      links_converted: Object.keys(shortMapping).length,
       mapping: shortMapping,
     });
   } catch (e: unknown) {
