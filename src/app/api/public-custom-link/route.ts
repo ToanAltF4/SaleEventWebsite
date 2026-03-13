@@ -12,7 +12,7 @@ import {
 
 function callShopeeAPI(cookie: string, payload: object): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const pythonCmd = process.platform === "win32" ? "python" : "python3.9";
     const scriptPath = path.join(process.cwd(), "shopee_helper.py");
     const proc = spawn(pythonCmd, [scriptPath]);
 
