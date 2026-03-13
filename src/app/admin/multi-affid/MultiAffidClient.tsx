@@ -92,16 +92,16 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
   return (
     <>
       <div style={{textAlign:'center',marginBottom:'20px',padding:'8px 0'}}>
-        <h3 style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Multi Affiliate</h3>
-        <p style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Quản lý nhiều Affiliate ID &mdash; Tạo link &amp; theo dõi click riêng biệt</p>
+        <h3 className="page-title" style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Multi Affiliate</h3>
+        <p className="page-subtitle" style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Quản lý nhiều Affiliate ID &mdash; Tạo link &amp; theo dõi click</p>
       </div>
 
       {/* Add new */}
       <div className="card">
         <div className="card-title">Thêm Affiliate ID mới</div>
         <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
-          <input type="text" value={newAffid} onChange={e => setNewAffid(e.target.value)} placeholder="Nhập Affiliate ID" style={{flex:1,minWidth:'160px'}} />
-          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Tên gợi nhớ (tùy chọn)" style={{flex:1,minWidth:'140px'}} />
+          <input type="text" value={newAffid} onChange={e => setNewAffid(e.target.value)} placeholder="Nhập Affiliate ID" style={{flex:1,minWidth:'0'}} />
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Tên (tùy chọn)" style={{flex:1,minWidth:'0'}} />
           <button className="btn btn-primary" onClick={addMultiAffid}>Thêm</button>
         </div>
         {addStatus && <div className={`status ${addStatus.type}`}>{addStatus.msg}</div>}
@@ -109,31 +109,31 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
 
       {affidData.length > 0 ? affidData.map(affid => (
         <div key={affid.id} className="card" style={{borderLeft:'3px solid var(--primary)'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'8px',marginBottom:'12px'}}>
-            <div>
-              <div style={{fontSize:'15px',fontWeight:700,color:'var(--text)'}}>
-                {affid.name || "Affiliate"} <span style={{fontSize:'12px',color:'var(--text-muted)',fontWeight:500}}>#{affid.affid}</span>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:'8px',marginBottom:'12px'}}>
+            <div style={{minWidth:0,flex:1}}>
+              <div style={{fontSize:'14px',fontWeight:700,color:'var(--text)',wordBreak:'break-word'}}>
+                {affid.name || "Affiliate"} <span style={{fontSize:'11px',color:'var(--text-muted)',fontWeight:500}}>#{affid.affid}</span>
               </div>
-              <div style={{fontSize:'11px',color:'var(--text-muted)',marginTop:'2px'}}>Tạo lúc: {affid.created_at}</div>
+              <div style={{fontSize:'10px',color:'var(--text-muted)',marginTop:'2px'}}>{affid.created_at}</div>
             </div>
-            <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
-              <span style={{background:'var(--primary)',color:'#fff',padding:'3px 10px',borderRadius:'12px',fontSize:'11px',fontWeight:700}}>{affid.total_links} link</span>
-              <span style={{background:'#E8F5E9',color:'#2E7D32',padding:'3px 10px',borderRadius:'12px',fontSize:'11px',fontWeight:700}}>{affid.total_clicks} click</span>
-              <button onClick={() => deleteMultiAffid(affid.id)} style={{background:'none',border:'1px solid #ffcdd2',borderRadius:'6px',padding:'4px 10px',cursor:'pointer',fontSize:'11px',fontWeight:700,color:'#C62828',fontFamily:"'Quicksand',sans-serif"}}>Xóa</button>
+            <div style={{display:'flex',gap:'4px',alignItems:'center',flexWrap:'wrap',flexShrink:0}}>
+              <span style={{background:'var(--primary)',color:'#fff',padding:'2px 8px',borderRadius:'10px',fontSize:'10px',fontWeight:700}}>{affid.total_links} link</span>
+              <span style={{background:'#E8F5E9',color:'#2E7D32',padding:'2px 8px',borderRadius:'10px',fontSize:'10px',fontWeight:700}}>{affid.total_clicks} click</span>
+              <button onClick={() => deleteMultiAffid(affid.id)} style={{background:'none',border:'1px solid #ffcdd2',borderRadius:'6px',padding:'3px 8px',cursor:'pointer',fontSize:'10px',fontWeight:700,color:'#C62828',fontFamily:"'Quicksand',sans-serif"}}>Xóa</button>
             </div>
           </div>
 
           {/* Convert link */}
           <div style={{display:'flex',gap:'8px',marginBottom:'10px'}}>
-            <input type="text" value={convertUrls[affid.id] || ""} onChange={e => setConvertUrls(s => ({...s, [affid.id]: e.target.value}))} placeholder="Dán link Shopee vào đây..." style={{flex:1}} />
-            <button className="btn btn-dark" onClick={() => convertMultiAffid(affid.id)}>Tạo link</button>
+            <input type="text" value={convertUrls[affid.id] || ""} onChange={e => setConvertUrls(s => ({...s, [affid.id]: e.target.value}))} placeholder="Dán link Shopee..." style={{flex:1,minWidth:0}} />
+            <button className="btn btn-dark" onClick={() => convertMultiAffid(affid.id)} style={{whiteSpace:'nowrap',fontSize:'13px'}}>Tạo link</button>
           </div>
           {convertStatuses[affid.id] && <div className={`status ${convertStatuses[affid.id]!.type}`}>{convertStatuses[affid.id]!.msg}</div>}
           {convertResults[affid.id] && (
             <div style={{marginTop:'8px'}}>
               <div style={{display:'flex',alignItems:'center',gap:'8px',background:'var(--primary-bg)',padding:'10px 14px',borderRadius:'8px'}}>
-                <input type="text" value={convertResults[affid.id]} readOnly style={{flex:1,border:'none',background:'transparent',fontSize:'13px',fontWeight:600,color:'var(--primary)'}} />
-                <button onClick={() => navigator.clipboard.writeText(convertResults[affid.id])} style={{background:'var(--primary)',color:'#fff',border:'none',borderRadius:'6px',padding:'6px 14px',cursor:'pointer',fontSize:'12px',fontWeight:700,fontFamily:"'Quicksand',sans-serif",whiteSpace:'nowrap'}}>Copy</button>
+                <input type="text" value={convertResults[affid.id]} readOnly style={{flex:1,minWidth:0,border:'none',background:'transparent',fontSize:'12px',fontWeight:600,color:'var(--primary)'}} />
+                <button onClick={() => navigator.clipboard.writeText(convertResults[affid.id])} style={{background:'var(--primary)',color:'#fff',border:'none',borderRadius:'6px',padding:'6px 12px',cursor:'pointer',fontSize:'11px',fontWeight:700,fontFamily:"'Quicksand',sans-serif",whiteSpace:'nowrap'}}>Copy</button>
               </div>
             </div>
           )}
@@ -142,41 +142,39 @@ export default function MultiAffidClient({ affidData, shortDomain }: { affidData
           {affid.links.length > 0 && (
             <div style={{marginTop:'14px'}}>
               <div style={{fontSize:'12px',fontWeight:700,color:'var(--text-sec)',marginBottom:'8px',textTransform:'uppercase'}}>Link đã tạo</div>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse',fontSize:'12px'}}>
-                  <thead>
-                    <tr style={{borderBottom:'2px solid var(--border)',textAlign:'left'}}>
-                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link rút gọn</th>
-                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link gốc</th>
-                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)'}}>Ngày tạo</th>
-                      <th style={{padding:'8px 6px',fontWeight:700,color:'var(--text-sec)',textAlign:'center'}}>Click</th>
+              <table className="responsive-table">
+                <thead>
+                  <tr>
+                    <th>Link rút gọn</th>
+                    <th>Link gốc</th>
+                    <th>Ngày tạo</th>
+                    <th style={{textAlign:'center'}}>Click</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {affid.links.map(link => (
+                    <tr key={link.id}>
+                      <td data-label="Link rút gọn">
+                        <div style={{display:'flex',alignItems:'center',gap:'4px',flexWrap:'wrap'}}>
+                          <a href={`/m/${link.short_code}`} target="_blank" style={{color:'var(--primary)',fontWeight:700,textDecoration:'none',fontSize:'12px',wordBreak:'break-all'}}>
+                            {shortDomain}/m/{link.short_code}
+                          </a>
+                          <button onClick={() => navigator.clipboard.writeText(`https://${shortDomain}/m/${link.short_code}`)} style={{background:'none',border:'1px solid var(--border)',borderRadius:'4px',padding:'1px 6px',cursor:'pointer',fontSize:'10px',fontFamily:"'Quicksand',sans-serif",fontWeight:600,color:'var(--text-sec)'}}>Copy</button>
+                        </div>
+                      </td>
+                      <td data-label="Link gốc" title={link.target_url} style={{fontSize:'11px',color:'var(--text-sec)'}}>
+                        <span style={{wordBreak:'break-all',whiteSpace:'normal'}}>{link.target_url?.substring(0, 50)}{(link.target_url?.length || 0) > 50 ? "..." : ""}</span>
+                      </td>
+                      <td data-label="Ngày tạo" style={{fontSize:'11px',color:'var(--text-muted)'}}>{link.created_at}</td>
+                      <td data-label="Click">
+                        <span style={{background: link.click_count > 0 ? 'var(--primary)' : 'var(--border)', color: link.click_count > 0 ? '#fff' : 'var(--text-sec)', padding:'2px 8px',borderRadius:'10px',fontSize:'11px',fontWeight:700}}>
+                          {link.click_count}
+                        </span>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {affid.links.map(link => (
-                      <tr key={link.id} style={{borderBottom:'1px solid var(--primary-bg)'}}>
-                        <td style={{padding:'8px 6px'}}>
-                          <div style={{display:'flex',alignItems:'center',gap:'4px'}}>
-                            <a href={`/m/${link.short_code}`} target="_blank" style={{color:'var(--primary)',fontWeight:700,textDecoration:'none',fontSize:'12px'}}>
-                              {shortDomain}/m/{link.short_code}
-                            </a>
-                            <button onClick={() => navigator.clipboard.writeText(`https://${shortDomain}/m/${link.short_code}`)} style={{background:'none',border:'1px solid var(--border)',borderRadius:'4px',padding:'1px 6px',cursor:'pointer',fontSize:'10px',fontFamily:"'Quicksand',sans-serif",fontWeight:600,color:'var(--text-sec)'}}>Copy</button>
-                          </div>
-                        </td>
-                        <td style={{padding:'8px 6px',maxWidth:'180px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:'11px',color:'var(--text-sec)'}} title={link.target_url}>
-                          {link.target_url?.substring(0, 70)}{link.target_url?.length > 70 ? "..." : ""}
-                        </td>
-                        <td style={{padding:'8px 6px',fontSize:'11px',color:'var(--text-muted)',whiteSpace:'nowrap'}}>{link.created_at}</td>
-                        <td style={{padding:'8px 6px',textAlign:'center'}}>
-                          <span style={{background: link.click_count > 0 ? 'var(--primary)' : 'var(--border)', color: link.click_count > 0 ? '#fff' : 'var(--text-sec)', padding:'2px 8px',borderRadius:'10px',fontSize:'11px',fontWeight:700}}>
-                            {link.click_count}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
 
               {/* Pagination */}
               {affid.total_pages > 1 && (

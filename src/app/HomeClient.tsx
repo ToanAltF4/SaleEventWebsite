@@ -105,8 +105,12 @@ export default function HomeClient({ user }: { user: string | null }) {
         setResult(customData.short_link);
         setStatus(null);
         apiSuccess = true;
+      } else {
+        console.warn("[HomeClient] custom-link failed:", customData.error || "unknown");
       }
-    } catch {}
+    } catch (err) {
+      console.warn("[HomeClient] custom-link exception:", err);
+    }
 
     if (!apiSuccess) {
       try {

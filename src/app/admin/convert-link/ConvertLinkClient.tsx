@@ -70,8 +70,8 @@ export default function ConvertLinkClient({ affiliateId: initialAffId }: { affil
 
       {/* Convert Link */}
       <div style={{textAlign:'center',marginBottom:'20px',padding:'8px 0'}}>
-        <h3 style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Chuyển đổi Link</h3>
-        <p style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Dán link Shopee &mdash; Nhận link Affiliate ngay</p>
+        <h3 className="page-title" style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Chuyển đổi Link</h3>
+        <p className="page-subtitle" style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Dán link Shopee &mdash; Nhận link Affiliate ngay</p>
       </div>
 
       <div className="card">

@@ -55,8 +55,8 @@ export default function ClickReportClient({
       </div>
 
       <div style={{textAlign:'center',marginBottom:'20px',padding:'8px 0'}}>
-        <h3 style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Báo Cáo Click</h3>
-        <p style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Thống kê lượt click từ các link rút gọn do Admin tạo</p>
+        <h3 className="page-title" style={{fontFamily:"'Playfair Display', Georgia, serif",fontSize:'28px',fontWeight:700,fontStyle:'italic',color:'var(--primary)',marginBottom:'4px'}}>Báo Cáo Click</h3>
+        <p className="page-subtitle" style={{fontSize:'13px',color:'var(--text-sec)',fontWeight:500}}>Thống kê lượt click từ các link rút gọn</p>
       </div>
 
       {/* Stats */}
@@ -74,7 +74,7 @@ export default function ClickReportClient({
       {/* Filter */}
       <div className="card">
         <div className="card-title">Bộ lọc</div>
-        <form method="GET" action="/admin/click-report" style={{display:'flex',gap:'8px',flexWrap:'wrap',alignItems:'flex-end'}}>
+        <form method="GET" action="/admin/click-report" className="filter-form" style={{display:'flex',gap:'8px',flexWrap:'wrap',alignItems:'flex-end'}}>
           <div style={{flex:1,minWidth:'140px'}}>
             <label style={{fontSize:'11px',fontWeight:700,color:'var(--text-sec)',display:'block',marginBottom:'4px'}}>Tìm kiếm</label>
             <input type="text" name="q" placeholder="Short code hoặc link..." defaultValue={search} style={{padding:'8px 10px',fontSize:'13px'}} />
@@ -95,45 +95,43 @@ export default function ClickReportClient({
       {/* Table */}
       <div className="card">
         <div className="card-title">Danh sách link ({links.length})</div>
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:'13px'}}>
-            <thead>
-              <tr style={{borderBottom:'2px solid var(--border)',textAlign:'left'}}>
-                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link rút gọn</th>
-                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Link gốc (affiliate)</th>
-                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)'}}>Ngày tạo</th>
-                <th style={{padding:'10px 6px',fontWeight:700,color:'var(--text-sec)',textAlign:'center'}}>Click</th>
+        <table className="responsive-table">
+          <thead>
+            <tr>
+              <th>Link rút gọn</th>
+              <th>Link gốc (affiliate)</th>
+              <th>Ngày tạo</th>
+              <th style={{textAlign:'center'}}>Click</th>
+            </tr>
+          </thead>
+          <tbody>
+            {links.length > 0 ? links.map(link => (
+              <tr key={link.id}>
+                <td data-label="Link rút gọn">
+                  <div style={{display:'flex',alignItems:'center',gap:'6px',flexWrap:'wrap'}}>
+                    <a href={`/s/${link.short_code}`} target="_blank" style={{color:'var(--primary)',fontWeight:700,textDecoration:'none',fontSize:'12px',wordBreak:'break-all'}}>
+                      {shortDomain}/s/{link.short_code}
+                    </a>
+                    <button onClick={() => { navigator.clipboard.writeText(`https://${shortDomain}/s/${link.short_code}`); }} style={{background:'none',border:'1px solid var(--border)',borderRadius:'4px',padding:'2px 8px',cursor:'pointer',fontSize:'10px',fontFamily:"'Quicksand',sans-serif",fontWeight:600,color:'var(--text-sec)'}}>Copy</button>
+                  </div>
+                </td>
+                <td data-label="Link gốc" style={{maxWidth:'220px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:'11px',color:'var(--text-sec)'}} title={link.target_url}>
+                  <span style={{wordBreak:'break-all',whiteSpace:'normal'}}>{link.target_url?.substring(0, 60)}{(link.target_url?.length || 0) > 60 ? "..." : ""}</span>
+                </td>
+                <td data-label="Ngày tạo" style={{fontSize:'11px',color:'var(--text-muted)'}}>{link.created_at}</td>
+                <td data-label="Click">
+                  <span style={{background: link.click_count > 0 ? 'var(--primary)' : 'var(--border)', color: link.click_count > 0 ? '#fff' : 'var(--text-sec)', padding:'3px 10px',borderRadius:'12px',fontSize:'11px',fontWeight:700}}>
+                    {link.click_count}
+                  </span>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {links.length > 0 ? links.map(link => (
-                <tr key={link.id} style={{borderBottom:'1px solid var(--primary-bg)'}}>
-                  <td style={{padding:'10px 6px'}}>
-                    <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
-                      <a href={`/s/${link.short_code}`} target="_blank" style={{color:'var(--primary)',fontWeight:700,textDecoration:'none',fontSize:'13px'}}>
-                        {shortDomain}/s/{link.short_code}
-                      </a>
-                      <button onClick={() => { navigator.clipboard.writeText(`https://${shortDomain}/s/${link.short_code}`); }} style={{background:'none',border:'1px solid var(--border)',borderRadius:'4px',padding:'2px 8px',cursor:'pointer',fontSize:'11px',fontFamily:"'Quicksand',sans-serif",fontWeight:600,color:'var(--text-sec)'}}>Copy</button>
-                    </div>
-                  </td>
-                  <td style={{padding:'10px 6px',maxWidth:'220px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:'11px',color:'var(--text-sec)'}} title={link.target_url}>
-                    {link.target_url?.substring(0, 90)}{link.target_url?.length > 90 ? "..." : ""}
-                  </td>
-                  <td style={{padding:'10px 6px',fontSize:'12px',color:'var(--text-muted)',whiteSpace:'nowrap'}}>{link.created_at}</td>
-                  <td style={{padding:'10px 6px',textAlign:'center'}}>
-                    <span style={{background: link.click_count > 0 ? 'var(--primary)' : 'var(--border)', color: link.click_count > 0 ? '#fff' : 'var(--text-sec)', padding:'3px 10px',borderRadius:'12px',fontSize:'12px',fontWeight:700}}>
-                      {link.click_count}
-                    </span>
-                  </td>
-                </tr>
-              )) : (
-                <tr><td colSpan={4} style={{padding:'24px',textAlign:'center',color:'var(--text-muted)',fontWeight:600}}>
-                  {search || dateFrom || dateTo ? "Không tìm thấy link phù hợp" : "Chưa có link nào được tạo từ Dashboard"}
-                </td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            )) : (
+              <tr><td colSpan={4} style={{padding:'24px',textAlign:'center',color:'var(--text-muted)',fontWeight:600}}>
+                {search || dateFrom || dateTo ? "Không tìm thấy link phù hợp" : "Chưa có link nào được tạo từ Dashboard"}
+              </td></tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </>
   );

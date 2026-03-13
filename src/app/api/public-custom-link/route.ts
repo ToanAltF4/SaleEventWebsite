@@ -2,11 +2,48 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSetting } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { spawn } from "child_process";
+import path from "path";
 import {
   isAffiliateRedirect, extractOriginFromRedirect,
   isShortUrl, expandShortUrl, isShopeeUrl,
   cleanShopeeUrl, extractShopItemId,
 } from "@/lib/url-processing";
+
+function callShopeeHelper(cookie: string, payload: object): Promise<Record<string, unknown>> {
+  return new Promise((resolve, reject) => {
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const scriptPath = path.join(process.cwd(), "shopee_helper.py");
+    const proc = spawn(pythonCmd, [scriptPath]);
+
+    let stdout = "";
+    let stderr = "";
+
+    proc.stdout.on("data", (data) => { stdout += data; });
+    proc.stderr.on("data", (data) => { stderr += data; });
+
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(`Python helper exited with code ${code}: ${stderr}`));
+      } else {
+        try {
+          resolve(JSON.parse(stdout));
+        } catch {
+          reject(new Error(`Invalid JSON: ${stdout.substring(0, 200)}`));
+        }
+      }
+    });
+
+    proc.on("error", (err) => {
+      reject(new Error(`Failed to spawn python: ${err.message}`));
+    });
+
+    proc.stdin.write(JSON.stringify({ cookie, payload }));
+    proc.stdin.end();
+
+    setTimeout(() => { proc.kill(); reject(new Error("Timeout")); }, 20000);
+  });
+}
 
 export async function POST(req: NextRequest) {
   // Rate limit unless logged in
@@ -79,33 +116,29 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    const resp = await fetch("https://affiliate.shopee.vn/api/v3/gql?q=batchCustomLink", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json; charset=UTF-8",
-        "affiliate-program-type": "1",
-        "x-sz-sdk-version": "1.12.21",
-        "cookie": cookie,
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(15000),
-    });
+    const result = await callShopeeHelper(cookie, payload) as {
+      data?: { batchCustomLink?: Array<{ failCode: number | string; shortLink?: string }> };
+      error?: string;
+    };
 
-    const result = await resp.json();
+    console.log("[public-custom-link] Shopee response:", JSON.stringify(result).substring(0, 500));
 
-    if (
-      result?.data?.batchCustomLink?.length > 0
-    ) {
+    if (result.error && !result.data) {
+      return NextResponse.json({ error: `Lỗi Shopee: ${result.error}` }, { status: 400 });
+    }
+
+    if (result?.data?.batchCustomLink?.length && result.data.batchCustomLink.length > 0) {
       const item = result.data.batchCustomLink[0];
-      if (item.failCode === 0 && item.shortLink) {
+      if ((item.failCode === 0 || item.failCode === "0") && item.shortLink) {
         return NextResponse.json({ success: true, short_link: item.shortLink });
       }
+      console.error("[public-custom-link] failCode:", item.failCode);
       return NextResponse.json({ error: `Shopee API failCode: ${item.failCode}` }, { status: 400 });
     }
     return NextResponse.json({ error: "Response không đúng format" }, { status: 400 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
+    console.error("[public-custom-link] Exception:", msg);
     return NextResponse.json({ error: `Lỗi kết nối Shopee: ${msg}` }, { status: 500 });
   }
 }
