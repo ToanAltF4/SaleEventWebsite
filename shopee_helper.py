@@ -2,7 +2,11 @@
 """Helper script to call Shopee Custom Link API using curl_cffi (Chrome TLS impersonation)."""
 import sys
 import json
-from curl_cffi import requests as cffi_requests
+try:
+    from curl_cffi import requests as cffi_requests
+except ImportError:
+    import curl_cffi
+    cffi_requests = curl_cffi.requests
 
 def main():
     try:

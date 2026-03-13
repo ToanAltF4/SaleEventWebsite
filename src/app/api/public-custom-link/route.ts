@@ -10,7 +10,7 @@ import {
   cleanShopeeUrl, extractShopItemId,
 } from "@/lib/url-processing";
 
-function callShopeeHelper(cookie: string, payload: object): Promise<Record<string, unknown>> {
+function callShopeeAPI(cookie: string, payload: object): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {
     const pythonCmd = process.platform === "win32" ? "python" : "python3";
     const scriptPath = path.join(process.cwd(), "shopee_helper.py");
@@ -18,35 +18,27 @@ function callShopeeHelper(cookie: string, payload: object): Promise<Record<strin
 
     let stdout = "";
     let stderr = "";
-
-    proc.stdout.on("data", (data) => { stdout += data; });
-    proc.stderr.on("data", (data) => { stderr += data; });
+    proc.stdout.on("data", (d) => { stdout += d; });
+    proc.stderr.on("data", (d) => { stderr += d; });
 
     proc.on("close", (code) => {
       if (code !== 0) {
-        reject(new Error(`Python helper exited with code ${code}: ${stderr}`));
+        reject(new Error(`Python exited ${code}: ${stderr.substring(0, 300)}`));
       } else {
-        try {
-          resolve(JSON.parse(stdout));
-        } catch {
-          reject(new Error(`Invalid JSON: ${stdout.substring(0, 200)}`));
-        }
+        try { resolve(JSON.parse(stdout)); }
+        catch { reject(new Error(`Invalid JSON: ${stdout.substring(0, 200)}`)); }
       }
     });
 
-    proc.on("error", (err) => {
-      reject(new Error(`Failed to spawn python: ${err.message}`));
-    });
-
+    proc.on("error", (err) => reject(new Error(`Spawn error: ${err.message}`)));
     proc.stdin.write(JSON.stringify({ cookie, payload }));
     proc.stdin.end();
 
-    setTimeout(() => { proc.kill(); reject(new Error("Timeout")); }, 20000);
+    setTimeout(() => { proc.kill(); reject(new Error("Timeout 20s")); }, 20000);
   });
 }
 
 export async function POST(req: NextRequest) {
-  // Rate limit unless logged in
   const user = await requireAuth();
   if (!user) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
@@ -116,7 +108,7 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    const result = await callShopeeHelper(cookie, payload) as {
+    const result = await callShopeeAPI(cookie, payload) as {
       data?: { batchCustomLink?: Array<{ failCode: number | string; shortLink?: string }> };
       error?: string;
     };
