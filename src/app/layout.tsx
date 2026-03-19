@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { initDb, cleanupOldHistory, cleanupOldShortLinks, cleanupOldMultiAffidLinks } from "@/lib/db";
+import { initDb } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Săn Sale Cùng Kim Ngân",
@@ -13,9 +13,6 @@ let dbInitialized = false;
 async function ensureDb() {
   if (!dbInitialized) {
     await initDb();
-    await cleanupOldHistory(14);
-    await cleanupOldShortLinks(30);
-    await cleanupOldMultiAffidLinks(30);
     dbInitialized = true;
   }
 }
