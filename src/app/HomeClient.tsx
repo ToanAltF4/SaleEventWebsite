@@ -170,7 +170,8 @@ export default function HomeClient({ user }: { user: string | null }) {
         .promo-instruction { width: 100%; text-align: left; font-size: 15px; font-weight: 700; color: var(--primary); line-height: 2; margin-top: 6px; }
         .fb-post-btn { width: 100%; padding: 13px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; font-family: 'Quicksand', sans-serif; cursor: pointer; color: #fff; background: #1877F2; text-decoration: none; text-align: center; display: block; transition: all 0.2s; box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3); }
         .fb-post-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .promo-img { width: 100%; max-width: 480px; border-radius: 14px; object-fit: cover; }
+        .promo-stack { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 0; border-radius: 14px; overflow: hidden; }
+        .promo-img { width: 100%; display: block; object-fit: cover; }
 
         .splash { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; background: linear-gradient(160deg, #FFF8FA 0%, #FFE8EE 40%, #FFF0F5 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.7s ease, transform 0.7s ease; overflow: hidden; }
         .splash.hide { opacity: 0; transform: scale(1.05); pointer-events: none; }
@@ -214,7 +215,7 @@ export default function HomeClient({ user }: { user: string | null }) {
 
       <div className="converter-section">
         <div className="converter-wrap">
-          <div className="converter-title">Tạo Link Mua Hàng Mã Độc Quyền Facebook</div>
+          <div className="converter-title">Tạo Link Nhận Mã Độc Quyền</div>
 
           <div className="converter-block">
             <div className="converter-label">Link gốc Shopee</div>
@@ -225,7 +226,7 @@ export default function HomeClient({ user }: { user: string | null }) {
           </div>
 
           <button className="convert-btn" onClick={handleConvert} disabled={loading}>
-            {loading ? "Đang xử lý..." : "Tạo link nhận mã Độc Quyền Facebook"}
+            {loading ? "Đang xử lý..." : "Nhận Voucher FB & IG"}
           </button>
 
           {status && (
@@ -247,9 +248,13 @@ export default function HomeClient({ user }: { user: string | null }) {
             <div style={{display:'flex',gap:'8px'}}><span>1&#65039;&#8419;</span><span>Copy link &amp; comment vào bài viết bên dưới</span></div>
             <div style={{display:'flex',gap:'8px'}}><span>2&#65039;&#8419;</span><span>Click vào link vừa comment sang Shopee mã sẽ tự động lưu</span></div>
           </div>
-          <a href="https://www.facebook.com/share/p/1C4do57ne2/" target="_blank" className="fb-post-btn">Truy cập bài viết</a>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/promo-20.jpg" alt="Mã giảm 20%" className="promo-img" />
+          <a href="https://www.facebook.com/share/p/1C4do57ne2/" target="_blank" className="fb-post-btn">Truy cập bài viết FB</a>
+          <div className="promo-stack">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/promo-20.jpg" alt="Mã giảm 20% FB" className="promo-img" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/instagram.jpg" alt="Instagram" className="promo-img" />
+          </div>
         </div>
       </div>
     </>
